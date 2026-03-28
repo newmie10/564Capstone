@@ -19,7 +19,7 @@ Minecraft chat input → Log4j 2.14.1 JNDI lookup → marshalsec LDAP server
 ## Prerequisites
 
 Install the following on your Ubuntu VM before starting:
-
+Ubuntu 25.10 VM - https://ubuntu.com/download/desktop
 ```bash
 sudo apt update
 sudo apt install -y openjdk-17-jdk maven git wget nano

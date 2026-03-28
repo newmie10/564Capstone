@@ -94,6 +94,10 @@ sudo wget https://prism-launcher-for-debian.github.io/repo/prismlauncher.gpg -O 
   && sudo apt update \
   && sudo apt install prismlauncher
 ```
+After downloading, run ```bash
+prismlauncher
+```
+Click "New Instance", then click Edit on the right side of the setting menu for the instance. Click "Add to Minecraft.jar" on the right side, select Browse, and select your client.jar file from the folder. Then click on that newly created jar in the list, and click Launch in the bottom right. You will have had to login to your Minecraft account on the launcher to play the client. Select Multiplayer -> Direct Connection -> 127.0.0.1:25565 to connect to your world. 
 
 In Prism Launcher:
 

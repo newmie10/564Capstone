@@ -135,10 +135,10 @@ Compile it targeting Java 17 bytecode:
 
 ```
 /usr/lib/jvm/java-17-openjdk-amd64/bin/javac Exploit.java```
-
+```
 Confirm both files exist:
 
-```bash
+```
 ls
 # Exploit.java  Exploit.class
 ```

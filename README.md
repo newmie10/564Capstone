@@ -222,6 +222,24 @@ If the file exists, you have confirmed RCE.
 
 ---
 
+## Quickstart
+Assuming you have already gone through the setup and build instructions above, you can use the `quickstart.sh` bash script to spin up all server instances in a tmux session. First ensure you have tmux installed:
+```bash
+sudo apt install tmux -y
+```
+Additionally make sure your Minecraft server, HTTP server, and LDAP servers are located at `~/log4jlab/`. Then run the script:
+```bash
+./quickstart.sh
+```
+You will now have a tmux session with 5 panes:
+1. Prism Launcher open, launch your Minecraft client from here
+1. Minecraft server running on 127.0.0.1:25565
+1. HTTP Server running on 127.0.0.1:8888
+1. LDAP redirect server running on 127.0.0.1:1389
+1. C2 Docker server running on 127.0.0.1:5000
+
+To quickly preview each pane use `ctrl+b w`. To switch panes use `ctrl+b [pane-number]`.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |

@@ -229,16 +229,19 @@ sudo apt install tmux -y
 ```
 Additionally make sure your Minecraft server, HTTP server, and LDAP servers are located at `~/log4jlab/`. Then run the script:
 ```bash
-./quickstart.sh
+./quickstart.sh         # use this to open 5 separate window tabs
+./quickstartsplit.sh    # use this to open all terminals split in one window
 ```
-You will now have a tmux session with 5 panes:
+You will now have a tmux session with 5 windows:
 1. Prism Launcher open, launch your Minecraft client from here
 1. Minecraft server running on 127.0.0.1:25565
 1. HTTP Server running on 127.0.0.1:8888
 1. LDAP redirect server running on 127.0.0.1:1389
 1. C2 Docker server running on 127.0.0.1:5000
 
-To quickly preview each pane use `ctrl+b w`. To switch panes use `ctrl+b [pane-number]`.
+To quickly preview each pane use `ctrl+b w`. To switch windows use `ctrl+b [pane-number]`. If using split mode, use `ctrl+b o` to cycle through each pane or `ctrl+b [arrow-keys]` for directional switching.
+
+**Note:** Depending on the malicious class name you're using, you may need to edit the Marshalsec startup command in either script to use 127.0.0.1:1389/#YourClassName. The default class name is `Implant`.
 
 ## Troubleshooting
 

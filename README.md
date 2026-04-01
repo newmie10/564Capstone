@@ -134,7 +134,7 @@ public class Exploit {
 Compile it targeting Java 17 bytecode:
 
 ```
-/usr/lib/jvm/java-17-openjdk-amd64/bin/javac Exploit.java```
+/usr/lib/jvm/java-17-openjdk-amd64/bin/javac Exploit.java
 ```
 Confirm both files exist:
 
@@ -214,7 +214,7 @@ Send LDAP reference result for Exploit redirecting to http://127.0.0.1:8888/Expl
 
 Then confirm the payload executed in terminal 4:
 
-```bash
+```
 ls /tmp/pwned
 ```
 
@@ -243,20 +243,16 @@ To quickly preview each pane use `ctrl+b w`. To switch windows use `ctrl+b [pane
 
 **Note:** Depending on the malicious class name you're using, you may need to edit the Marshalsec startup command in either script to use 127.0.0.1:1389/#YourClassName. The default class name is `Implant`.
 
+You may also clone this repository to directly download all relevant build files, but be forewarned that it may not compile or run correctly on your machine if you are using a different OS / VM or do not have the relevant Java version and all other necessary packages installed. 
+
+**AI Disclaimer:** This README.md has been formatted and outlined with the help of AI (Claude by Anthropic). Other relevant files, such as the C2 server, have also been created using the assistance of AI. 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | Marshalsec fires but Python gets no GET request | JVM not following LDAP redirect | Confirm `trustURLCodebase` flags are set on server launch |
-| `UnsupportedClassVersionError` | Wrong JDK for server jar | Use JDK 17 for the server, compile payload with `-source 8 -target 8` |
+| `UnsupportedClassVersionError` | Wrong JDK for server jar | Use JDK 17 for the server, compile payload with direct java17 installation |
 | Flatpak fails for Prism | FUSE not supported in VM | Use the AppImage install method |
 | `/tmp/pwned` not created | Class loaded but not executed | Check that `Exploit.class` compiled correctly and is in the payload directory |
 
 ---
-
-## Evidence to Collect for Report
-
-1. Marshalsec terminal output showing the LDAP lookup being received
-2. Python HTTP server log showing `GET /Exploit.class 200`
-3. Output of `ls /tmp/pwned` confirming file creation
-4. Screenshot of the chat payload being sent in Minecraft

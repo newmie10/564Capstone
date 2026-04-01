@@ -8,7 +8,7 @@
 
 Log4Shell abuses Log4j's JNDI lookup feature. When Minecraft logs a chat message containing `${jndi:ldap://...}`, Log4j 2.14.1 processes it, reaches out to your LDAP server (marshalsec), which redirects it to your HTTP server hosting a malicious Java class. That class executes on the Minecraft server JVM.
 
-![Attack Diagram](Log4Shell.png)
+![Attack Diagram](images/Log4Shell.png)
 
 
 **Attack chain:**

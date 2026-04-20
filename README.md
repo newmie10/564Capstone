@@ -52,6 +52,23 @@ java -version
 # should show openjdk 17
 ```
 
+Must enable vulnerable version of sudo for our privilege escalation attack: 
+```
+cd ~/log4j-lab/sudo/
+./configure
+make
+sudo make install
+```
+Now set this sudo to your PATH; modern Ubuntu 25.10 uses sudo-rs which does not enable -R flag
+
+```
+export PATH=/usr/local/bin:$PATH
+```
+You can test this exploit by executing the POC (learn more at CVE-2025-32463 - cool exploit) 
+```
+./../privesc/CVE-2025-32463-POC.sh
+```
+
 ---
 
 ## Directory Structure

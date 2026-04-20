@@ -55,6 +55,8 @@ curl -X POST http://localhost:5000/checkin \
 curl.exe -X POST http://localhost:5000/add_command -H "Content-Type: application/json" -d "{\"command\":\"whoami\"}"
 ```
 
+**Note that the "whoami" in -d "{\"command\":\"whoami\"} can be changed to any allowlisted command within app.py**
+
 ### 3. Get Command
 
 ```bash

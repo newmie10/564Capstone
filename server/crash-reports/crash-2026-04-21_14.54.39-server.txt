@@ -1,0 +1,208 @@
+---- Minecraft Crash Report ----
+// Surprise! Haha. Well, this is awkward.
+
+Time: 4/21/26, 2:54 PM
+Description: Watching Server
+
+java.lang.Error: Watchdog
+	at java.base@21.0.10/java.util.Arrays.fill(Arrays.java:3430)
+	at app//org.apache.logging.log4j.core.impl.MutableLogEvent.clear(MutableLogEvent.java:150)
+	at app//org.apache.logging.log4j.core.impl.ReusableLogEventFactory.createEvent(ReusableLogEventFactory.java:94)
+	at app//org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:453)
+	at app//org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:82)
+	at app//org.apache.logging.log4j.core.Logger.log(Logger.java:161)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.tryLogMessage(AbstractLogger.java:2205)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessageTrackRecursion(AbstractLogger.java:2159)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessageSafely(AbstractLogger.java:2142)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessage(AbstractLogger.java:2040)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logIfEnabled(AbstractLogger.java:1907)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.warn(AbstractLogger.java:2794)
+	at app//net.minecraft.server.MinecraftServer.x(SourceFile:678)
+	at app//net.minecraft.server.MinecraftServer.a(SourceFile:274)
+	at app//net.minecraft.server.MinecraftServer$$Lambda/0x000072456473e560.run(Unknown Source)
+	at java.base@21.0.10/java.lang.Thread.runWith(Thread.java:1596)
+	at java.base@21.0.10/java.lang.Thread.run(Thread.java:1583)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Server Watchdog
+Stacktrace:
+	at java.base@21.0.10/java.util.Arrays.fill(Arrays.java:3430)
+	at app//org.apache.logging.log4j.core.impl.MutableLogEvent.clear(MutableLogEvent.java:150)
+	at app//org.apache.logging.log4j.core.impl.ReusableLogEventFactory.createEvent(ReusableLogEventFactory.java:94)
+	at app//org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:453)
+	at app//org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:82)
+	at app//org.apache.logging.log4j.core.Logger.log(Logger.java:161)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.tryLogMessage(AbstractLogger.java:2205)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessageTrackRecursion(AbstractLogger.java:2159)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessageSafely(AbstractLogger.java:2142)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessage(AbstractLogger.java:2040)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logIfEnabled(AbstractLogger.java:1907)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.warn(AbstractLogger.java:2794)
+	at app//net.minecraft.server.MinecraftServer.x(SourceFile:678)
+	at app//net.minecraft.server.MinecraftServer.a(SourceFile:274)
+	at app//net.minecraft.server.MinecraftServer$$Lambda/0x000072456473e560.run(Unknown Source)
+
+-- Thread Dump --
+Details:
+	Threads: "Reference Handler" daemon prio=10 Id=9 RUNNABLE
+	at java.base@21.0.10/java.lang.ref.Reference.waitForReferencePendingList(Native Method)
+	at java.base@21.0.10/java.lang.ref.Reference.processPendingReferences(Reference.java:246)
+	at java.base@21.0.10/java.lang.ref.Reference$ReferenceHandler.run(Reference.java:208)
+
+
+"Finalizer" daemon prio=8 Id=10 WAITING on java.lang.ref.NativeReferenceQueue$Lock@44efbc4e
+	at java.base@21.0.10/java.lang.Object.wait0(Native Method)
+	-  waiting on java.lang.ref.NativeReferenceQueue$Lock@44efbc4e
+	at java.base@21.0.10/java.lang.Object.wait(Object.java:366)
+	at java.base@21.0.10/java.lang.Object.wait(Object.java:339)
+	at java.base@21.0.10/java.lang.ref.NativeReferenceQueue.await(NativeReferenceQueue.java:48)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:158)
+	at java.base@21.0.10/java.lang.ref.NativeReferenceQueue.remove(NativeReferenceQueue.java:89)
+	at java.base@21.0.10/java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:173)
+
+
+"Signal Dispatcher" daemon prio=9 Id=11 RUNNABLE
+
+
+"Notification Thread" daemon prio=9 Id=18 RUNNABLE
+
+
+"Common-Cleaner" daemon prio=8 Id=19 TIMED_WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@4a284aa3
+	at java.base@21.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@4a284aa3
+	at java.base@21.0.10/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+	at java.base@21.0.10/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1852)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.await(ReferenceQueue.java:71)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:143)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:218)
+	at java.base@21.0.10/jdk.internal.ref.CleanerImpl.run(CleanerImpl.java:140)
+	at java.base@21.0.10/java.lang.Thread.runWith(Thread.java:1596)
+	...
+
+
+"Timer hack thread" daemon prio=5 Id=40 TIMED_WAITING
+	at java.base@21.0.10/java.lang.Thread.sleep0(Native Method)
+	at java.base@21.0.10/java.lang.Thread.sleep(Thread.java:509)
+	at app//ad$6.run(SourceFile:714)
+
+
+"Snooper Timer" daemon prio=5 Id=49 WAITING on java.util.TaskQueue@4e17d73e
+	at java.base@21.0.10/java.lang.Object.wait0(Native Method)
+	-  waiting on java.util.TaskQueue@4e17d73e
+	at java.base@21.0.10/java.lang.Object.wait(Object.java:366)
+	at java.base@21.0.10/java.lang.Object.wait(Object.java:339)
+	at java.base@21.0.10/java.util.TimerThread.mainLoop(Timer.java:537)
+	at java.base@21.0.10/java.util.TimerThread.run(Timer.java:516)
+
+
+"Server thread" prio=5 Id=48 RUNNABLE
+	at java.base@21.0.10/java.util.Arrays.fill(Arrays.java:3430)
+	at app//org.apache.logging.log4j.core.impl.MutableLogEvent.clear(MutableLogEvent.java:150)
+	at app//org.apache.logging.log4j.core.impl.ReusableLogEventFactory.createEvent(ReusableLogEventFactory.java:94)
+	at app//org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:453)
+	at app//org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:82)
+	at app//org.apache.logging.log4j.core.Logger.log(Logger.java:161)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.tryLogMessage(AbstractLogger.java:2205)
+	at app//org.apache.logging.log4j.spi.AbstractLogger.logMessageTrackRecursion(AbstractLogger.java:2159)
+	...
+
+
+"Server console handler" daemon prio=5 Id=51 RUNNABLE (in native)
+	at java.base@21.0.10/java.io.FileInputStream.readBytes(Native Method)
+	at java.base@21.0.10/java.io.FileInputStream.read(FileInputStream.java:287)
+	at java.base@21.0.10/java.io.BufferedInputStream.read1(BufferedInputStream.java:345)
+	at java.base@21.0.10/java.io.BufferedInputStream.implRead(BufferedInputStream.java:420)
+	at java.base@21.0.10/java.io.BufferedInputStream.read(BufferedInputStream.java:399)
+	at java.base@21.0.10/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base@21.0.10/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base@21.0.10/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)
+	...
+
+	Number of locked synchronizers = 3
+	- java.util.concurrent.locks.ReentrantLock$NonfairSync@b154098
+	- java.util.concurrent.locks.ReentrantLock$NonfairSync@32219078
+	- java.util.concurrent.locks.ReentrantLock$NonfairSync@3ad4a9cd
+
+
+"DestroyJavaVM" prio=5 Id=52 RUNNABLE
+
+
+"ObjectCleanerThread" daemon prio=1 Id=53 TIMED_WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@4a0a278e
+	at java.base@21.0.10/jdk.internal.misc.Unsafe.park(Native Method)
+	-  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@4a0a278e
+	at java.base@21.0.10/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+	at java.base@21.0.10/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1852)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.await(ReferenceQueue.java:71)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:143)
+	at java.base@21.0.10/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:218)
+	at app//io.netty.util.internal.ObjectCleaner$1.run(ObjectCleaner.java:54)
+	at app//io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	...
+
+
+"Netty Epoll Server IO #0" daemon prio=5 Id=54 RUNNABLE (in native)
+	at app//io.netty.channel.epoll.Native.epollWait0(Native Method)
+	at app//io.netty.channel.epoll.Native.epollWait(Native.java:114)
+	at app//io.netty.channel.epoll.EpollEventLoop.epollWait(EpollEventLoop.java:239)
+	at app//io.netty.channel.epoll.EpollEventLoop.run(EpollEventLoop.java:256)
+	at app//io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:884)
+	at java.base@21.0.10/java.lang.Thread.runWith(Thread.java:1596)
+	at java.base@21.0.10/java.lang.Thread.run(Thread.java:1583)
+
+
+"Server Watchdog" daemon prio=5 Id=61 RUNNABLE
+	at java.management@21.0.10/sun.management.ThreadImpl.dumpThreads0(Native Method)
+	at java.management@21.0.10/sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:518)
+	at java.management@21.0.10/sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:506)
+	at app//aav.run(SourceFile:49)
+	at java.base@21.0.10/java.lang.Thread.runWith(Thread.java:1596)
+	at java.base@21.0.10/java.lang.Thread.run(Thread.java:1583)
+
+
+
+Stacktrace:
+	at aav.run(SourceFile:65)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+-- Performance stats --
+Details:
+	Random tick rate: 3
+	Level stats: ResourceKey[minecraft:dimension / minecraft:overworld]: players: 0, entities: 104,104,34,529,529,0,0 [minecraft:falling_block:37,minecraft:item:20,minecraft:chicken:12,minecraft:sheep:9,minecraft:cow:8], block_entities: 7 [minecraft:mob_spawner:5,minecraft:beehive:2], block_ticks: 6147, fluid_ticks: 4332, chunk_source: Chunks[S] W: 2025 E: 104,104,34,529,529,0,0,
+ResourceKey[minecraft:dimension / minecraft:the_nether]: players: 0, entities: 0,0,0,0,0,0,0 [], block_entities: 0 [], block_ticks: 0, fluid_ticks: 0, chunk_source: Chunks[S] W: 0 E: 0,0,0,0,0,0,0,
+ResourceKey[minecraft:dimension / minecraft:the_end]: players: 0, entities: 0,0,0,0,0,0,0 [], block_entities: 0 [], block_ticks: 0, fluid_ticks: 0, chunk_source: Chunks[S] W: 0 E: 0,0,0,0,0,0,0
+
+-- System Details --
+Details:
+	Minecraft Version: 1.17
+	Minecraft Version ID: 1.17
+	Operating System: Linux (amd64) version 6.17.0-22-generic
+	Java Version: 21.0.10, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode, sharing), Oracle Corporation
+	Memory: 689130392 bytes (657 MiB) / 1073741824 bytes (1024 MiB) up to 1073741824 bytes (1024 MiB)
+	CPUs: 8
+	Processor Vendor: GenuineIntel
+	Processor Name: 11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz
+	Identifier: Intel64 Family 6 Model 140 Stepping 1
+	Microarchitecture: Tiger Lake
+	Frequency (GHz): 3.00
+	Number of physical packages: 1
+	Number of physical CPUs: 8
+	Number of logical CPUs: 8
+	Graphics card #0 name: QXL paravirtual graphic card
+	Graphics card #0 vendor: Red Hat, Inc. (0x1b36)
+	Graphics card #0 VRAM (MB): 0.00
+	Graphics card #0 deviceId: 0x0100
+	Graphics card #0 versionInfo: unknown
+	Virtual memory max (MB): 7260.99
+	Virtual memory used (MB): 2761.88
+	Swap memory total (MB): 4052.00
+	Swap memory used (MB): 0.00
+	JVM Flags: 2 total; -Xmx1024M -Xms1024M
+	Player Count: 0 / 20; []
+	Data Packs: vanilla
+	Is Modded: Unknown (can't tell)
+	Type: Dedicated Server (map_server.txt)

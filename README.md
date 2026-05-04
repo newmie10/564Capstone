@@ -343,6 +343,19 @@ To quickly preview each pane use `ctrl+b w`. To switch windows use `ctrl+b [pane
 You may also clone this repository to directly download all relevant build files, but be forewarned that it may not compile or run correctly on your machine if you are using a different OS / VM or do not have the relevant Java version and all other necessary packages installed. 
 
 **AI Disclaimer:** This README.md has been formatted and outlined with the help of AI (Claude by Anthropic). Other relevant files, such as the C2 server, have also been created using the assistance of AI. 
+
+## Cryptography
+
+All C2 and exfil traffic data is encrypted using the [Fernet](https://cryptography.io/en/latest/fernet/) standard implemented in the Python Cryptography library. This standard uses AES-128 in CBC mode with PKCS7 padding and a random Initialization Vector. It also uses HMAC via SHA-256 for two-way message authentication.
+
+This standard is built in to the Python library, but had to be implemented in a custom script in the C++ implant.
+
+The symmetric secret key is not stored directly on the implant but rather generated at runtime using a split XOR mask. This is to deter any chance of its discovery using static analysis, but is still susceptible to dynamic analysis if the adversary was able to obtain our implant binary prior to deletion.
+
+Both implementations can be found in isolation in the ```crypto/``` directory with small test servers.
+
+**NOTE:** The Python portion requires ```pip install cryptography``` and the C++ code requires the ```-lssl -lcrypto``` flags while building.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |

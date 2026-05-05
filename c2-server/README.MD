@@ -23,7 +23,7 @@ c2-server/
 
 ## Build Instructions
 
-From the project directory:
+From the c2-server/ directory (or wherever the Dockerfile lives):
 
 ```bash
 docker build -t c2-server-draft .
@@ -35,11 +35,23 @@ docker build -t c2-server-draft .
 docker run -d -p 5000:5000 --name capstone-c2-server-draft c2-server-draft
 ```
 
+````
+
 The server will be available at `http://localhost:5000`.
 
 ---
 
-## Example Usage
+#Using the http://localhost:5000 UI (Note, refreshing the web page frequently is needed to see changes to Queued commands and Task History.)
+
+### 1. Queuing a Command
+
+At the top of the screen, there should be a text bar where a command can be typed/copied into and submitted to the queue. Upon submitting, the "Queued Commands" list will get updated.
+
+### 2. Issuing the Command to the Implant
+
+Below that, there should be a button called "Fetch and Issue Command". Clicking that button will take the first command in the queue and issue it to the implant. Removes that command from the queue, and adds it to Task History on the website.
+
+## Example Usage with curl
 
 ### 1. Check-in
 
@@ -47,7 +59,7 @@ The server will be available at `http://localhost:5000`.
 curl -X POST http://localhost:5000/checkin \
   -H "Content-Type: application/json" \
   -d '{"host":"test-machine"}'
-```
+````
 
 ### 2. Add Command
 

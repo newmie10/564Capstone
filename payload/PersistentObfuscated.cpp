@@ -174,8 +174,9 @@ static std::vector<uint8_t> _b64d(const std::string& s) {
         if (c >= '0' && c <= '9') return c - '0' + 52;
         if (c == '-' || c == '+') return 62;
         if (c == '_' || c == '/') return 63;
-        return 0;
-    };
+            }
+    return 0;
+};
     std::vector<uint8_t> out;
     out.reserve(s.size() * 3 / 4);
     uint32_t val = 0; int bits = 0;
@@ -276,7 +277,7 @@ std::string _fd(const std::string& token_b64, const std::string& key_b64) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 static const std::string _ch = zz(_s0);
-static const int _cp = 5000;
+static const int _cp = 80;
 static const int _ps = 5;
 static const int _jp = 20;
 

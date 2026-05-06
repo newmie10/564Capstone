@@ -1,0 +1,37 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: proxy_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+# IMPORTANT: nginx needs to be able to resolve "flask" (or whatever your
+# Flask container is named) on a shared docker network. Two options:
+#
+# OPTION A — your Flask container is already on a docker network:
+#   1. Find its network name:    docker inspect <flask-container> | grep NetworkMode
+#   2. Replace the block below with:
+#        networks:
+#          proxy_net:
+#            external: true
+#            name: <that-network-name>
+#   3. Make sure the Flask container's service name on that network is "flask",
+#      OR edit nginx/conf.d/default.conf and change `proxy_pass http://flask:5000;`
+#      to use whatever name/IP it actually has.
+#
+# OPTION B — connect both containers to a network you create here:
+#   1. Keep this file as-is (creates "proxy_net").
+#   2. Connect your existing Flask container to it:
+#        docker network connect nginx-proxy_proxy_net <your-flask-container-name>
+#   3. If your Flask container isn't named "flask", either rename it or edit
+#      nginx/conf.d/default.conf to point at the right name.
+
+networks:
+  proxy_net:
+    driver: bridge

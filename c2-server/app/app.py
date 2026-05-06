@@ -92,8 +92,6 @@ def add_command():
     if not cmd:
         return jsonify({"error": "No command provided."}), 400
 
-    commandQ.append(cmd)
-    print(f'[+] Command added to queue: {cmd}')
     
     if request.method == "GET":
         return f"<h1>Command added: {cmd}</h1><p><a href='/'>Return to Dashboard</a></p><script>setTimeout(() => window.location.href='/', 1000);</script>"

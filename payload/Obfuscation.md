@@ -1,6 +1,4 @@
 # Obfuscation Techniques
- 
-This document outlines the various anti-reverse-engineering techniques implemented in `ImplantObfuscated.java` when compared to its cleartext counterpart, `Implant.java`. The resulting obfuscated code is functionally identical but presents a significantly more complex and misleading structure to decompilers and analysts.
 
 The implemented techniques draw inspiration from standard obfuscators like ProGuard and JBCO (Java Bytecode Obfuscator).
 

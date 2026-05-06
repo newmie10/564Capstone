@@ -1,0 +1,4 @@
+/* Static Analysis of PersistentObfuscated.elf */
+/* Output of `readelf -d PersistentObfuscated.elf` */
+
+There is no dynamic section in this file.

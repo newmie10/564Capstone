@@ -370,3 +370,7 @@ Both implementations can be found in isolation in the ```crypto/``` directory wi
 | Flatpak fails for Prism | FUSE not supported in VM | Use the AppImage install method |
 
 ---
+
+## YARA Rule
+
+A sample YARA rule along with the output of basic static analysis a blue team may perform on our implant if discovered can be found in the ```yara/``` directory. The structure of the rules is based on the limited information that is available from this analysis after all of our obfuscation efforts, and targets basic indicators of a malicious implant such as log scrubbing, use of cryptographic primitives, and static linking.

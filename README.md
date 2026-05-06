@@ -184,7 +184,7 @@ In Prism Launcher:
 
 1. Click **Add Instance**
 2. Select Minecraft version **1.17**
-Port number can be found in server folder under server.properties. Default is 25565
+   *(Port number can be found in server folder under server.properties. Default is 25565)*
 3. Launch the instance and connect to `localhost:port` or `127.0.0.1:port`
 
 
@@ -201,11 +201,7 @@ nano Beachhead.java
 
 Paste the following:
 
-```
-public class Beachhead { ... }
-```
-
-*(Alternatively, you can copy the contents of `BeachheadObfuscated.java` provided in this repository, which employs ProGuard-style obfuscation to evade static analysis.)*
+```java
 public class Beachhead {
     static {
         try {
@@ -216,6 +212,9 @@ public class Beachhead {
     }
 }
 ```
+
+*(Alternatively, you can copy the contents of `BeachheadObfuscated.java` provided in this repository, which employs ProGuard-style obfuscation to evade static analysis.)*
+
 
 Compile it targeting Java 17 bytecode (use the obfuscated filename if you chose that route):
 
@@ -357,9 +356,9 @@ This standard is built in to the Python library, but had to be implemented in a 
 
 The symmetric secret key is not stored directly on the implant but rather generated at runtime using a split XOR mask. This is to deter any chance of its discovery using static analysis, but is still susceptible to dynamic analysis if the adversary was able to obtain our implant binary prior to deletion.
 
-Both implementations can be found in isolation in the ```crypto/``` directory with small test servers.
+Both implementations can be found in isolation in the `crypto/` directory with small test servers.
 
-**NOTE:** The Python portion requires ```pip install cryptography``` and the C++ code requires the ```-lssl -lcrypto``` flags while building.
+**NOTE:** The Python portion requires `pip install cryptography` and the C++ code requires the `-lssl -lcrypto` flags while building.
 
 ## Troubleshooting
 

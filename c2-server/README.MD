@@ -1,29 +1,17 @@
 ## Features
 
 - `/checkin` — receives beacon from implant
-- `/add_command` — adds a command to the command queue. Commands must be added to the queue first before the user wishes to use "/command".
-- `/command` — returns the specified command
+- `/add_command` — adds a command to the command queue (must be queued before issuing via `/command`)
+- `/command` — issues the next queued command to the implant
 - `/result` — receives execution output from implant
 - Allowlisted commands only (no arbitrary execution)
 - Runs in Docker for isolation and reproducibility
 
 ---
 
-## Project Structure
-
-```
-c2-server/
-├── app.py
-├── requirements.txt
-├── Dockerfile
-└── README.md
-```
-
----
-
 ## Build Instructions
 
-From the project directory:
+From the `c2-server/` directory:
 
 ```bash
 docker build -t c2-server-draft .
@@ -39,7 +27,21 @@ The server will be available at `http://localhost:5000`.
 
 ---
 
-## Example Usage
+## Using the Web UI
+
+> **Note:** Refresh the page frequently to see updated Queued Commands and Task History.
+
+### 1. Queuing a Command
+
+Type a command into the text bar at the top of the page and click **Send Command**. The command will appear in the Queued Commands list.
+
+### 2. Issuing a Command to the Implant
+
+Click **Fetch & Issue Command** to dequeue the first command and issue it to the implant. It will be removed from the queue and added to Task History.
+
+---
+
+## Example Usage (curl)
 
 ### 1. Check-in
 
@@ -52,10 +54,12 @@ curl -X POST http://localhost:5000/checkin \
 ### 2. Add Command
 
 ```bash
-curl.exe -X POST http://localhost:5000/add_command -H "Content-Type: application/json" -d "{\"command\":\"whoami\"}"
+curl -X POST http://localhost:5000/add_command \
+  -H "Content-Type: application/json" \
+  -d '{"command":"whoami"}'
 ```
 
-**Note that the "whoami" in -d "{\"command\":\"whoami\"} can be changed to any allowlisted command within app.py**
+> Replace `whoami` with any allowlisted command defined in `app.py`.
 
 ### 3. Get Command
 

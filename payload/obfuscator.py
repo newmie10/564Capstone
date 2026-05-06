@@ -132,9 +132,14 @@ static void _dc0() { int x = 42; if (((x*x) < 0)) exit(0); }
     
     final_src = re.sub(main_pattern, main_replacement, final_src)
     
+    # Replace the return in main with the matching closing brace for the opaque predicate
     ret_pattern = r"return 0;\s*\n\s*\}"
     ret_replacement = "    }\n    return 0;\n}"
-    final_src = re.sub(ret_pattern, ret_replacement, final_src)
+    # Find the last match and replace it
+    matches = list(re.finditer(ret_pattern, final_src))
+    if matches:
+        last_match = matches[-1]
+        final_src = final_src[:last_match.start()] + ret_replacement + final_src[last_match.end():]
 
     with open("PersistentObfuscated.cpp", "w") as f:
         f.write(final_src)
